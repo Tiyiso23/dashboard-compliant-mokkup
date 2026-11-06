@@ -19,6 +19,7 @@ import { RpaControlPanel } from './components/RpaControlPanel';
 import { DocumentManagement } from './components/DocumentManagement';
 import { ReportsAnalytics } from './components/ReportsAnalytics';
 import { UserManagement } from './components/UserManagement';
+import { WorkflowAutomationView } from './components/WorkflowAutomationView';
 import { CheckCircle2, Bot, Scan } from 'lucide-react';
 
 export default function App() {
@@ -167,6 +168,16 @@ export default function App() {
                   setSarsSubTab(sub);
                 }}
                 onTriggerRpa={() => setActiveTab('automation-centre')}
+              />
+            )}
+
+            {/* View 1.5: End-to-End Workflow Pipeline (OneDrive → OCR → AI Classification → Compliance Engine → Human Approval → Dashboard) */}
+            {activeTab === 'workflow' && (
+              <WorkflowAutomationView
+                onDocumentAdded={handleDocumentAdded}
+                onNavigateToDashboard={() => setActiveTab('dashboard')}
+                onNavigateToGates={() => setActiveTab('compliance-gates')}
+                onNavigateToRegister={() => setActiveTab('master-register')}
               />
             )}
 

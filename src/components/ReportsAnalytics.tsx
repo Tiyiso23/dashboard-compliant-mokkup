@@ -10,8 +10,11 @@ import {
   Shield,
   Layers,
   Sparkles,
+  FileSpreadsheet,
+  Check,
 } from 'lucide-react';
 import { ComplianceDocument } from '../types';
+import { AuditHistory } from './AuditHistory';
 
 interface ReportsAnalyticsProps {
   documents: ComplianceDocument[];
@@ -23,11 +26,80 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
   onTriggerRpaReport,
 }) => {
   const [showFullDossier, setShowFullDossier] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   const totalDocs = documents.length;
   const compliantDocs = documents.filter((d) => d.status === 'COMPLIANT').length;
   const warningDocs = documents.filter((d) => d.status === 'WARNING').length;
   const auditScore = ((compliantDocs / (totalDocs || 1)) * 100).toFixed(1);
+
+  // Generate and download a mock summary CSV of current compliance documents
+  const handleExportCsv = () => {
+    setIsExportingCsv(true);
+
+    const headers = [
+      'Document ID',
+      'Document Title',
+      'Pillar / Category',
+      'Sub-Category',
+      'Document Type',
+      'Company Name',
+      'Tax Reference',
+      'Reference Number',
+      'Issue Date',
+      'Expiry Date',
+      'Compliance Status',
+      'OCR Confidence (%)',
+      'File Size',
+      'Verified By',
+      'Verification Timestamp',
+      'Audit Notes',
+    ];
+
+    const escapeCsvField = (field: string | number | undefined | null) => {
+      if (field === undefined || field === null) return '""';
+      const str = String(field).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = documents.map((doc) => [
+      escapeCsvField(doc.id),
+      escapeCsvField(doc.title),
+      escapeCsvField(doc.category),
+      escapeCsvField(doc.subCategory),
+      escapeCsvField(doc.documentType),
+      escapeCsvField(doc.companyName),
+      escapeCsvField(doc.taxReference),
+      escapeCsvField(doc.referenceNumber),
+      escapeCsvField(doc.issueDate),
+      escapeCsvField(doc.expiryDate),
+      escapeCsvField(doc.status),
+      escapeCsvField(doc.confidenceScore),
+      escapeCsvField(doc.fileSize),
+      escapeCsvField(doc.verifiedBy),
+      escapeCsvField(doc.verifiedAt),
+      escapeCsvField(doc.notes || 'Verified under Mindworx ComplianceOS rules'),
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\r\n');
+
+    // Create browser blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestampStr = new Date().toISOString().slice(0, 10);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Mindworx_Compliance_Documents_Summary_${timestampStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setIsExportingCsv(false);
+    setExportNotice(`Exported summary CSV (${documents.length} compliance documents).`);
+    setTimeout(() => setExportNotice(null), 4000);
+  };
 
   return (
     <div className="space-y-6">
@@ -48,23 +120,44 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Export Report CSV Button */}
+          <button
+            onClick={handleExportCsv}
+            disabled={isExportingCsv}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900/90 border border-emerald-700/80 hover:border-emerald-600 rounded-md transition-colors shadow-sm"
+            title="Download CSV summary report of current compliance documents"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{isExportingCsv ? 'Exporting CSV...' : 'Export Report'}</span>
+          </button>
+
           <button
             onClick={() => setShowFullDossier(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-md transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-md transition-colors"
           >
             <FileCheck className="w-3.5 h-3.5 text-purple-400" />
             <span>View Full Audit Dossier</span>
           </button>
           <button
             onClick={onTriggerRpaReport}
-            className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-md transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-md transition-colors shadow-sm"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Generate PDF Audit Dossier</span>
           </button>
         </div>
       </div>
+
+      {exportNotice && (
+        <div className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-lg text-xs text-emerald-200 flex items-center justify-between font-mono animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{exportNotice}</span>
+          </div>
+          <button onClick={() => setExportNotice(null)} className="text-emerald-400 hover:text-white">✕</button>
+        </div>
+      )}
 
       {/* KPI Scores Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -189,6 +282,11 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Chronological Audit Log & Automated Outcome History */}
+      <div className="pt-2">
+        <AuditHistory />
       </div>
 
       {/* Full Dossier Modal Preview */}

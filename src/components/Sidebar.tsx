@@ -63,6 +63,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>Dashboard Overview</span>
           </button>
 
+          {/* End-to-End Workflow Pipeline */}
+          <button
+            onClick={() => onSelectTab('workflow')}
+            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'workflow'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <span>End-to-End Workflow</span>
+            </div>
+            <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-800 font-bold">
+              AI Core
+            </span>
+          </button>
+
           {/* The 9 Gates */}
           <button
             onClick={() => onSelectTab('compliance-gates')}

@@ -1,5 +1,6 @@
 export type ActiveTab =
   | 'dashboard'
+  | 'workflow'
   | 'compliance-gates'
   | 'master-register'
   | 'audit-packs'
@@ -204,3 +205,85 @@ export interface UserAccount {
   status: 'Active' | 'Invited' | 'Suspended';
   permissions: string[];
 }
+
+export interface AuditHistoryEntry {
+  id: string;
+  timestamp: string;
+  rawDate: string;
+  auditTitle: string;
+  auditType: 'SARS TCS Gateway' | 'QCTO Monitoring' | 'MICT SETA Verification' | 'EISA Venue & Staffing' | 'CIPC & COIDA Governance' | 'B-BBEE Evidence Audit';
+  gateOrPillar: string;
+  status: 'PASSED' | 'ACTION REQUIRED' | 'CRITICAL NON-COMPLIANCE';
+  automatedOutcomes: string;
+  itemsAudited: number;
+  passedItems: number;
+  failedItems: number;
+  durationMs: number;
+  executedBy: string;
+  evidenceHash: string;
+  details?: {
+    summary: string;
+    keyFindings: string[];
+    actionItems?: string[];
+  };
+}
+
+export interface WorkflowStage {
+  id: 'onedrive' | 'ocr' | 'ai_classification' | 'compliance_engine' | 'human_approval' | 'dashboard';
+  title: string;
+  shortDesc: string;
+  status: 'IDLE' | 'PROCESSING' | 'COMPLETED' | 'WARNING' | 'FAILED';
+  durationMs?: number;
+  outputSummary?: string;
+  details?: Record<string, any>;
+}
+
+export interface WorkflowDocumentItem {
+  id: string;
+  sourceFile: string;
+  sourcePath: string; // OneDrive / Google Drive path
+  fileSize: string;
+  receivedAt: string;
+  uploaderRole: string;
+  ocrOutput?: {
+    rawTextPreview: string;
+    textLayerConfidence: number;
+    extractedFields: Record<string, string>;
+  };
+  aiClassification?: {
+    documentClass: string;
+    applicablePillar: 'QCTO' | 'MICT SETA' | 'SARS' | 'B-BBEE' | 'Consulting';
+    relevantGates: number[];
+    confidence: number;
+    legibilityScore: number;
+    policeStampDetected: boolean;
+    certificationDate?: string;
+    monthsSinceCertification?: number;
+    detectedSignatures: string[];
+  };
+  complianceEngine?: {
+    gateNumber: number;
+    gateName: string;
+    gateStatus: GateComplianceStatus;
+    invariantsPassed: string[];
+    blockingDeficiencies: string[];
+    readinessImpact: string;
+    requiresHumanReview: boolean;
+  };
+  humanApproval?: {
+    status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CONDITIONAL';
+    reviewedBy?: string;
+    reviewedAt?: string;
+    reviewerRole?: string;
+    decisionNotes?: string;
+    signaturesConfirmed?: boolean;
+    stampValidityConfirmed?: boolean;
+  };
+  dashboardSync?: {
+    syncedAt?: string;
+    targetRegistry: string;
+    status: 'SYNCED' | 'QUEUED' | 'FAILED';
+    auditEvidenceHash: string;
+  };
+}
+

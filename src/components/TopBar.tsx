@@ -40,6 +40,14 @@ export const TopBar: React.FC<TopBarProps> = ({
           Overview
         </button>
         <button
+          onClick={() => onSelectTab('workflow')}
+          className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'workflow' ? 'text-cyan-400 font-semibold' : ''
+          }`}
+        >
+          AI Workflow
+        </button>
+        <button
           onClick={() => onSelectTab('compliance-gates')}
           className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'compliance-gates' ? 'text-cyan-400 font-semibold' : ''
