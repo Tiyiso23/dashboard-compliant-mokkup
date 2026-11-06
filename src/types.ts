@@ -1,8 +1,14 @@
 export type ActiveTab =
   | 'dashboard'
+  | 'compliance-gates'
+  | 'master-register'
+  | 'audit-packs'
+  | 'cohorts'
+  | 'eisa-readiness'
+  | 'raci-matrix'
+  | 'sars'
   | 'academic'
   | 'consulting'
-  | 'sars'
   | 'automation-centre'
   | 'documents'
   | 'reports'
@@ -35,6 +41,98 @@ export type RpaApproach =
   | 'hybrid';
 
 export type ComplianceStatus = 'COMPLIANT' | 'WARNING' | 'EXPIRED' | 'PENDING';
+
+export type GateComplianceStatus = 'PASSED' | 'ACTION REQUIRED' | 'CRITICAL NON-COMPLIANCE';
+
+export interface GateDefinition {
+  id: number;
+  number: string;
+  name: string;
+  pillar: 'QCTO' | 'MICT SETA' | 'Document QA' | 'B-BBEE';
+  status: GateComplianceStatus;
+  validationRule: string;
+  systemAction: string;
+  blockingConditions: string[];
+  itemsVerified: number;
+  itemsTotal: number;
+  readinessScore: number;
+  leadOwner: string;
+  nextScheduledReview?: string;
+  findingsCount: number;
+  ncrCount: number;
+}
+
+export interface MasterRegisterItem {
+  id: string;
+  documentName: string;
+  appliesTo: string;
+  gatesNeeded: number[];
+  validityCheck: string;
+  certifiedDate?: string;
+  expiryDate?: string;
+  daysRemaining?: number;
+  status: GateComplianceStatus;
+  googleDrivePath: string;
+  fileSize: string;
+  lastCheckedBy: string;
+  lastCheckedAt: string;
+  owner: string;
+  rejectionReason?: string;
+}
+
+export interface CohortComplianceRecord {
+  id: string;
+  code: string;
+  name: string;
+  qualification: string;
+  saqaId: string;
+  learnerType: 'Employed' | 'Unemployed' | 'Bank';
+  totalLearners: number;
+  currentGate: number;
+  gateStatuses: Record<number, GateComplianceStatus>;
+  qctoWindow: { start: string; end: string; daysRemaining: number };
+  eisaDate?: string;
+  complianceScore: number;
+  missingDocumentsCount: number;
+  assignedAssessor: string;
+  assignedModerator: string;
+  siteVisitModeratorBooked: boolean;
+}
+
+export interface EisaChecklistItem {
+  id: string;
+  category: 'Venue' | 'Documents' | 'Staff';
+  item: string;
+  requirement: string;
+  isCompliant: boolean;
+  severity: 'CRITICAL NON-COMPLIANCE' | 'ACTION REQUIRED';
+  responsibleRole: string;
+  notes: string;
+}
+
+export interface NonConformanceReport {
+  id: string;
+  gateNumber: number;
+  gateName: string;
+  title: string;
+  severity: 'CRITICAL NON-COMPLIANCE' | 'ACTION REQUIRED';
+  finding: string;
+  rootCause: string;
+  correctiveAction: string;
+  assignee: string;
+  dueDate: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+  escalatedTo: string;
+}
+
+export interface RaciItem {
+  activity: string;
+  complianceAgent: 'R' | 'R (drafts)' | 'R (checklist)' | 'C' | 'I';
+  complianceOfficer: 'A' | 'R' | 'C' | 'I';
+  qacLead: 'C' | 'A' | 'I';
+  opsLead: 'I' | 'A' | 'C';
+  recruitment: 'C' | '—' | 'I';
+}
 
 export interface ComplianceDocument {
   id: string;

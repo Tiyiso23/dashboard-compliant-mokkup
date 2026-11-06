@@ -40,28 +40,36 @@ export const TopBar: React.FC<TopBarProps> = ({
           Overview
         </button>
         <button
-          onClick={() => onSelectTab('sars')}
+          onClick={() => onSelectTab('compliance-gates')}
           className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
-            activeTab === 'sars' ? 'text-emerald-400 font-semibold' : ''
+            activeTab === 'compliance-gates' ? 'text-cyan-400 font-semibold' : ''
           }`}
         >
-          SARS Hub
+          9 Automated Gates
         </button>
         <button
-          onClick={() => onSelectTab('academic')}
+          onClick={() => onSelectTab('master-register')}
           className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
-            activeTab === 'academic' ? 'text-purple-400 font-semibold' : ''
+            activeTab === 'master-register' ? 'text-cyan-400 font-semibold' : ''
           }`}
         >
-          Academic
+          Master Register
         </button>
         <button
-          onClick={() => onSelectTab('consulting')}
+          onClick={() => onSelectTab('audit-packs')}
           className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
-            activeTab === 'consulting' ? 'text-blue-400 font-semibold' : ''
+            activeTab === 'audit-packs' ? 'text-cyan-400 font-semibold' : ''
           }`}
         >
-          Consulting
+          Audit Packs
+        </button>
+        <button
+          onClick={() => onSelectTab('eisa-readiness')}
+          className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'eisa-readiness' ? 'text-rose-400 font-semibold' : ''
+          }`}
+        >
+          EISA Readiness
         </button>
         <button
           onClick={() => onSelectTab('automation-centre')}
@@ -69,7 +77,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             activeTab === 'automation-centre' ? 'text-cyan-400 font-semibold' : ''
           }`}
         >
-          OCR & RPA Automation
+          OCR & RPA
         </button>
       </nav>
 
@@ -89,7 +97,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 rounded-md hover:bg-cyan-300 transition-colors whitespace-nowrap shrink-0 disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isAuditing ? 'animate-spin' : ''}`} />
-          <span>{isAuditing ? 'Auditing...' : 'Run Full Audit'}</span>
+          <span>{isAuditing ? 'Validating Gates...' : 'Run Gate Check'}</span>
         </button>
       </div>
     </header>

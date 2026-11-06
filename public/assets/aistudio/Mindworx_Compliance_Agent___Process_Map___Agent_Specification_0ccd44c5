@@ -1,0 +1,315 @@
+﻿Mindworx Compliance Agent – Process Map & Agent Specification
+Executive Summary
+The Mindworx Compliance Agent (working name: ComplianceOS) turns the Academy's compliance and QAC procedures into automated, gate-driven checks so that recurring mistakes stop reaching SETA, QCTO and EISA evaluators. Compliance and quality assurance are the part of the Academy where errors recur most, so every procedure Phyllis Muthombeni mapped on 14 October 2026 becomes a check the agent runs.
+The agent works on four pillars: QCTO registration, monitoring and EISA readiness; MICT SETA registration, verification and accreditation; document QA (assessor and moderator scope, PoEs, SoRs, SLAs); and B-BBEE skills development evidence. Nothing is submitted to MICT SETA or QCTO, and no EISA exam goes ahead, until the agent has cleared the matching gate.
+The agent has three jobs: check documents as they arrive, track expiry dates before they lapse, and compile complete audit files before each site visit. It prepares every file and submits applications to MICT SETA and QCTO once the Compliance Officer approves them.
+Detailed Automated Gate Functions
+Nine gates cover every procedure walked through on 14 October; each has a validation rule and a system action.
+1. Onboarding Gate
+* Automated validation: Picks the agreement set by learner type (employed, unemployed, bank). Scans certified IDs, qualifications and CVs for legibility, a certification stamp and a certification date within the last 3 months. Non-South Africans need a certified passport.
+* System action: Blocks SETA and QCTO registration until every file is verified. Sends the learner a list of what is missing.
+2. Registration Gate
+* Automated validation: Builds the MICT SETA bulk upload file and the QCTO enrolment forms from verified records only.
+* System action: Tracks each learner until the SETA Proof of Registration arrives. Starts the QCTO monitoring countdown on the registration date.
+3. Assessor & Moderator Scope Gate
+* Automated validation: Checks registration numbers, qualification scope and expiry dates against the delivery calendar. Confirms a signed SLA with Mindworx.
+* System action: Alerts 90 days before expiry. Blocks an expired assessor or moderator from signing PoEs or moderation samples.
+4. QCTO Monitoring Visit Gate
+QCTO visits between 21 days and 2 months after registration to confirm the learnership is being implemented. The agent compiles the file below and flags gaps two weeks before the window opens.
+* Assessor accreditation, certified IDs or passports, CVs and certified qualifications
+* SDP accreditation letter and SDP standard operating procedures
+* Training schedule, assessment strategy, timetables and lesson plans
+* QCTO registration letters for the learners
+* Facility check: furniture, lighting, cleanliness and ventilation (or proof of the online delivery method)
+* Minutes of meetings, learnership agreements, certified learner IDs and onboarding induction report
+5. Verification Gate (on course completion)
+* Trigger: Assessor and moderation reports arrive.
+* Automated validation: Drafts the Statement of Results (SoR) and completion letters. Compiles the verification file: assessor and moderator reports, their SETA registration letters, SLA with Mindworx, SDP accreditation letter, learner transcripts, SoR sheet and learner PoEs.
+* System action: Blocks the MICT SETA application until the file is complete, then submits it once approved. Confirms a moderator is booked for the verification site visit. Logs the signed verification report and tracks certificates until received.
+6. Post-Course Review Gate
+* Automated validation: Confirms SoRs, client reference letters, and completed knowledge, practical and workplace module PoEs.
+* System action: Marks the cohort ready for EISA only when every learner's modules are complete.
+7. EISA Exam Readiness Gate
+* Automated validation: Scores the venue and staffing checklist:
+   * Venue: laptops, screens, learner name tags, table numbers, seating plan, signage to the exam centre and bathrooms
+   * Documents: valid accreditation letter, wall clock, registers, site report and video report
+   * Staff: 2 invigilators per room, 1 chief invigilator, training manager, IT support, staff name tags
+* System action: Flags CRITICAL NON-COMPLIANCE if invigilator ratios, accreditation or equipment are incomplete.
+8. New Qualification Accreditation Gate (any time)
+* Automated validation: Compiles the SETA/QCTO accreditation pack: facilitator documents and accreditation letters, valid company stamp, lease agreement, tax compliance status, public liability insurance, SLAs, staff IDs and qualifications, OHS representative appointment, first aid kit, venue evidence and proof of online training method.
+* System action: Shows a readiness score per document and blocks submission until all are current.
+9. B-BBEE Evidence Gate
+* Automated validation: Assembles signed agreements, verified IDs, disability certificates where claimed, stipend proof and payslips, SETA registration letters, SoRs and absorption letters.
+* System action: Reconciles trained seats with WSP/ATR submissions before the cohort closes, and feeds the client B-BBEE self-service portal.
+Master Document Register
+The agent's knowledge base is one register: every document, who it applies to, which gates need it and how it expires. Documents live in Google Drive.
+Document
+	Applies to
+	Needed at gate
+	Validity check
+	EA1 Learnership Agreement
+	All learners
+	Onboarding, Monitoring, B-BBEE
+	Signed by all parties
+	Fixed-Term Contract
+	Unemployed learners
+	Onboarding, B-BBEE
+	Signed; covers programme duration
+	Unemployed Affordability form
+	Unemployed learners
+	Onboarding
+	Signed
+	SETA Agreement
+	Bank learners
+	Onboarding
+	Signed
+	Certified ID or passport
+	Learners, staff, assessors
+	Onboarding, Monitoring, Accreditation
+	Certified within the last 3 months
+	Certified highest qualification / matric
+	Learners, staff
+	Onboarding, Monitoring
+	Certified, legible
+	Updated CV
+	Learners, facilitators, assessors
+	Onboarding, Monitoring
+	Current
+	SETA bulk upload + QCTO enrolment form
+	Learners
+	Registration
+	Submitted
+	SETA / QCTO Proof of Registration
+	Learners
+	Registration, Monitoring, Verification
+	Received
+	Assessor / moderator registration letter
+	Assessors, moderators
+	Scope, Monitoring, Verification
+	Not expired (3-year cycle); scope matches
+	SLA with Mindworx
+	Assessors, moderators, facilitators
+	Scope, Verification, Accreditation
+	Signed; not expired
+	SDP accreditation letter
+	Mindworx
+	All site visits, EISA
+	Not expired
+	SDP SOPs, training schedule, assessment strategy
+	Mindworx
+	Monitoring
+	Current version
+	Timetables, lesson plans, minutes, induction report
+	Cohort
+	Monitoring
+	Present for the cohort
+	Facility checklist (furniture, lighting, cleanliness, ventilation) OHS report and certificates 
+	Venue
+	Monitoring, Accreditation
+	Completed before visit
+	Assessor report + moderation report
+	Cohort
+	Verification
+	Signed
+	Statement of Results + completion letters
+	Learners
+	Verification, Post-course, B-BBEE
+	Generated from reports
+	Learner transcripts + PoEs
+	Learners
+	Verification, Post-course
+	Complete per module
+	Client reference letter
+	Cohort
+	Post-course
+	Signed
+	Lease agreement
+	Mindworx
+	Accreditation
+	Not expired
+	Tax compliance status
+	Mindworx
+	Accreditation
+	Valid
+	Public liability insurance
+	Mindworx
+	Accreditation
+	Not expired
+	OHS representative appointment + first aid kit
+	Venue
+	Accreditation
+	Current
+	CIPC, CSD, bank letter ( every 3 Months), director IDs( certified every 3 months), latest financial statements 
+	Mindworx
+	Accreditation, grant funding
+	Current year
+	Absorption letters, payslips, stipend proof
+	Learners
+	B-BBEE
+	Per month / per learner
+	Expiry & Risk Tracking Rules
+Any lapsed date is treated as CRITICAL NON-COMPLIANCE; the agent alerts well before that point.
+Item
+	First alert
+	Escalation
+	On expiry
+	SDP / provider accreditation
+	12 months before
+	6 months, then 90 days
+	Block new cohorts and site-visit submissions
+	Assessor / moderator registration (3-year cycle)
+	90 days before
+	30 days
+	Block from PoE sign-off and moderation
+	Mindworx SLAs with assessors and facilitators
+	60 days before
+	30 days, then every 2 days
+	Block from session allocation
+	Lease, public liability, tax compliance, OHS appointment
+	60 days before
+	30 days, then every 2 days
+	Accreditation pack marked incomplete
+	Certified learner ID copies (3-month limit)
+	At upload
+	—
+	Reject and request re-certification
+	Host employer / workplace agreements
+	90 days before
+	30 days
+	Flag cohort at risk
+	QCTO monitoring window
+	Registration date
+	2 weeks before window opens
+	File gaps escalated to QAC lead
+	Every finding the agent raises uses one status: PASSED, ACTION REQUIRED or CRITICAL NON-COMPLIANCE. A blurry, unsigned or incomplete document is flagged as unverified, never assumed compliant.
+Agent Architecture
+ Agent architecture · 4 inputs, 3 jobs, 4 outputs 
+
+Agent architecture · 4 inputs, 3 jobs, 4 outputs
+The agent runs on four triggers: a document is uploaded, a learner's registration status changes, an expiry alert window opens, or a site visit or EISA date is booked. Every report it produces follows one layout: Executive Summary with overall status, Gap Analysis matrix, specific NCRs, and a Corrective Action Plan naming who acts and by when.
+Proposed Platform: Google Workspace
+The agent runs inside Mindworx's Google Workspace, so every document stays in Google Drive and staff work in tools they already use. Lucid holds the process maps that define each gate's rules.
+Layer
+	Tool
+	What it does
+	Process maps
+	Lucid
+	One flow per gate; the agreed source for the agent's rules
+	Document store
+	Google Drive (Shared Drive)
+	Every learner, staff and company document in a fixed folder structure
+	Master register
+	Google Sheets
+	One row per document: owner, type, certified date, expiry date, status
+	Learner uploads
+	Google Forms
+	Learners upload certified ID, qualification and CV straight into their Drive folder
+	Document checks
+	Gemini, called from Apps Script
+	Reads each upload; checks legibility, stamp, certification date and signatures; writes the result to the register
+	Schedules
+	Google Calendar
+	QCTO monitoring windows, verification visits, EISA dates and renewal deadlines
+	Automation and alerts
+	Google Apps Script + Gmail
+	Daily expiry check; alerts at 60 and 30 days, then every 2 days; compiles audit packs into a Drive folder
+	Reporting
+	Looker Studio
+	Stakeholder dashboards built on the register
+	Submissions
+	MICT SETA and QCTO portals
+	Agent prepares the application; submits once the Compliance Officer approves
+	Portal submission may need a person or a browser agent, because the MICT SETA and QCTO portals may not offer an API. Claude, connected to Google Drive, Calendar and Gmail, is an alternative engine for document checks.
+Suggested Google Drive structure:
+* Compliance / Company: accreditation letters, lease, tax compliance, public liability, OHS, CIPC, CSD
+* Compliance / Staff: one folder per facilitator, assessor and moderator (ID, CV, registration, SLA)
+* Cohorts / [cohort] / Learners / [learner]: agreements, certified documents, PoE
+* Cohorts / [cohort] / Site visits: monitoring, verification and EISA packs
+Roles & RACI
+Tender and Procurement Administrator owns compliance document management day to day, as agreed in the 17 September 1:1; the agent does the checking and compiling.
+Activity
+	Compliance Agent
+	Compliance Officer (Tandeeka)
+	QAC Lead / Training Manager
+	Ops and Programmes Lead 
+	Recruitment / Onboarding
+	Learner document checks
+	R
+	A
+	I
+	I
+	C
+	SETA / QCTO registration submissions
+	R (drafts)
+	A
+	C
+	I
+	C
+	Expiry tracking and renewals
+	R
+	A
+	I
+	I
+	—
+	Monitoring and verification files
+	R
+	A
+	C
+	I
+	—
+	Site visit hosting (moderator present)
+	I
+	R
+	A
+	I
+	—
+	EISA venue readiness
+	R (checklist)
+	C
+	A
+	I
+	—
+	Accreditation packs
+	R
+	A
+	C
+	C
+	—
+	B-BBEE evidence packs
+	R
+	A
+	I
+	C
+	—
+	Agent rules and SOP sign-off
+	C
+	R
+	C
+	A
+	I
+	R = Responsible, A = Accountable, C = Consulted, I = Informed.
+Build Roadmap, Decisions & Next Steps
+Build in four phases, starting where mistakes recur most: onboarding documents and expiry dates.
+1. Foundation: Set up the Google Drive folders and load the Master Document Register into a Google Sheet and expiry dates for staff, assessors and Mindworx company documents. Turn on expiry alerts.
+2. Onboarding & Registration: Document checks, agreement set selection, SETA bulk upload and QCTO enrolment drafting.
+3. Site visit files: QCTO monitoring, SETA verification, post-course and accreditation packs, with readiness scores.
+4. EISA & B-BBEE: EISA readiness checklist, B-BBEE evidence packs and dashboard feeds.
+Decisions confirmed
+Question
+	Decision
+	Certified ID copies
+	Must be certified within the last 3 months
+	Assessor and moderator registration
+	Renews every 3 years; alerts at 90 and 30 days before expiry
+	Alerts for SLAs, leases and insurance
+	60 days and 30 days before expiry, then every 2 days until renewed
+	Governing bodies and submissions
+	MICT SETA and QCTO; the agent prepares the files and submits the applications
+	Platform
+	Google Workspace, with Lucid for process maps (see Proposed Platform)
+	Next steps
+* ☐ Phyllis Muthombeni: review and sign off this process map
+* ☐  populate the register with current expiry dates from the shared drive
+* ☐ Team: draw the process flows in Lucid from this document
+* ☐ Developer: build the Compliance SOP and agent instructions from the gates above
+* ☐ Developer: set up the Google Workspace platform, then build Phase 1 and test it against one live cohort

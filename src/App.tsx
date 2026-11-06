@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { ActiveTab, SarsSubTab, AcademicSubTab, ConsultingSubTab, ComplianceDocument } from './types';
+import { ActiveTab, SarsSubTab, AcademicSubTab, ConsultingSubTab, ComplianceDocument, GateDefinition, MasterRegisterItem } from './types';
 import { INITIAL_DOCUMENTS } from './data/mockComplianceData';
+import { COMPLIANCE_GATES, MASTER_DOCUMENT_REGISTER } from './data/complianceOsData';
 import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
 import { DashboardOverview } from './components/DashboardOverview';
+import { ComplianceGatesView } from './components/ComplianceGatesView';
+import { MasterRegisterView } from './components/MasterRegisterView';
+import { AuditPacksView } from './components/AuditPacksView';
+import { CohortsProgressView } from './components/CohortsProgressView';
+import { EisaReadinessView } from './components/EisaReadinessView';
+import { RaciMatrixView } from './components/RaciMatrixView';
 import { SarsCompliance } from './components/SarsCompliance';
 import { AcademicCompliance } from './components/AcademicCompliance';
 import { ConsultingCompliance } from './components/ConsultingCompliance';
@@ -20,6 +27,8 @@ export default function App() {
   const [academicSubTab, setAcademicSubTab] = useState<AcademicSubTab>('all');
   const [consultingSubTab, setConsultingSubTab] = useState<ConsultingSubTab>('all');
   const [documents, setDocuments] = useState<ComplianceDocument[]>(INITIAL_DOCUMENTS);
+  const [gates, setGates] = useState<GateDefinition[]>(COMPLIANCE_GATES);
+  const [masterRegister, setMasterRegister] = useState<MasterRegisterItem[]>(MASTER_DOCUMENT_REGISTER);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isAuditing, setIsAuditing] = useState(false);
   const [globalBanner, setGlobalBanner] = useState<string | null>(null);
@@ -50,10 +59,34 @@ export default function App() {
     setSarsSubTab('tcs-pin-verification');
   };
 
+  // Run gate validation simulation
+  const handleTriggerGateCheck = (gateId: number) => {
+    setGates((prev) =>
+      prev.map((g) =>
+        g.id === gateId
+          ? {
+              ...g,
+              readinessScore: Math.min(100, g.readinessScore + 4),
+              itemsVerified: Math.min(g.itemsTotal, g.itemsVerified + 1),
+            }
+          : g
+      )
+    );
+    setGlobalBanner(`Gate 0${gateId} automated verification completed. Artifacts reconciled.`);
+    setTimeout(() => setGlobalBanner(null), 3500);
+  };
+
+  // Trigger OCR Check from Master Register
+  const handleTriggerOcrFromRegister = (item: MasterRegisterItem) => {
+    setActiveTab('automation-centre');
+    setGlobalBanner(`OCR Scanner loaded for ${item.documentName}. Processing image/PDF layer...`);
+    setTimeout(() => setGlobalBanner(null), 3500);
+  };
+
   // Trigger Full Audit from TopBar
   const handleRunFullAudit = async () => {
     setIsAuditing(true);
-    setGlobalBanner('Executing automated enterprise audit across SARS, SETA, SITA, and CIPC...');
+    setGlobalBanner('Executing automated ComplianceOS gate validation across all 9 gates...');
 
     try {
       await fetch('/api/rpa-run', {
@@ -61,7 +94,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'expiry_scan', approach: 'hybrid' }),
       });
-      setGlobalBanner('Full Audit Complete: 97.4% Compliance Score confirmed. Zero outstanding tax debt.');
+      setGlobalBanner('Full ComplianceOS Audit Complete: 94.8% Gate Clearance Score confirmed. Zero outstanding tax debt.');
     } catch {
       setGlobalBanner('Audit verification finished. All systems nominal.');
     } finally {
@@ -137,7 +170,36 @@ export default function App() {
               />
             )}
 
-            {/* View 2: SARS Compliance */}
+            {/* View 2: The 9 Automated Compliance Gates (Process Map Core) */}
+            {activeTab === 'compliance-gates' && (
+              <ComplianceGatesView
+                gates={gates}
+                onTriggerGateCheck={handleTriggerGateCheck}
+                onNavigateToAuditPacks={(_gateId) => setActiveTab('audit-packs')}
+              />
+            )}
+
+            {/* View 3: Master Document Register */}
+            {activeTab === 'master-register' && (
+              <MasterRegisterView
+                items={masterRegister}
+                onTriggerOcrCheck={handleTriggerOcrFromRegister}
+              />
+            )}
+
+            {/* View 4: Site Visit & Evaluation Audit Packs */}
+            {activeTab === 'audit-packs' && <AuditPacksView />}
+
+            {/* View 5: EISA Examination Readiness (Gate 7 Venue & Staffing Scorer) */}
+            {activeTab === 'eisa-readiness' && <EisaReadinessView />}
+
+            {/* View 6: Learnership Cohorts Progression Trail */}
+            {activeTab === 'cohorts' && <CohortsProgressView />}
+
+            {/* View 7: RACI Accountability Governance Matrix */}
+            {activeTab === 'raci-matrix' && <RaciMatrixView />}
+
+            {/* View 8: SARS Compliance */}
             {activeTab === 'sars' && (
               <SarsCompliance
                 documents={documents}
@@ -147,7 +209,7 @@ export default function App() {
               />
             )}
 
-            {/* View 3: Academic Compliance */}
+            {/* View 9: Academic Compliance */}
             {activeTab === 'academic' && (
               <AcademicCompliance
                 documents={documents}
@@ -157,7 +219,7 @@ export default function App() {
               />
             )}
 
-            {/* View 4: Consulting Compliance */}
+            {/* View 10: Consulting Compliance */}
             {activeTab === 'consulting' && (
               <ConsultingCompliance
                 documents={documents}
@@ -167,16 +229,13 @@ export default function App() {
               />
             )}
 
-            {/* View 5: AI Automation Centre (Dedicated OCR Document Scanner & RPA Control Panel) */}
+            {/* View 11: AI Automation Centre (OCR Scanner & RPA Control Panel) */}
             {activeTab === 'automation-centre' && (
               <div className="space-y-10">
-                {/* 1. OCR Document Scanner Section */}
                 <OcrScanner
                   onDocumentAdded={handleDocumentAdded}
                   onNavigateToSarsVerify={handleNavigateToSarsVerify}
                 />
-
-                {/* 2. Robotic Automation Control Panel (RPA) Section */}
                 <RpaControlPanel
                   onRefreshComplianceStatus={() => {
                     setGlobalBanner('Compliance status refreshed from automated RPA run.');
@@ -188,7 +247,7 @@ export default function App() {
               </div>
             )}
 
-            {/* View 6: Document Management Vault */}
+            {/* View 12: Document Management Vault */}
             {activeTab === 'documents' && (
               <DocumentManagement
                 documents={documents}
@@ -197,7 +256,7 @@ export default function App() {
               />
             )}
 
-            {/* View 7: Reports & Regulatory Analytics */}
+            {/* View 13: Reports & Regulatory Analytics */}
             {activeTab === 'reports' && (
               <ReportsAnalytics
                 documents={documents}
@@ -205,7 +264,7 @@ export default function App() {
               />
             )}
 
-            {/* View 8: User Management */}
+            {/* View 14: User Management */}
             {activeTab === 'users' && <UserManagement />}
           </div>
         </main>
