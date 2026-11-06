@@ -1,0 +1,6 @@
+{
+  "name": "Mindworx Compliance - OCR & RPA Automation Dashboard",
+  "description": "Enterprise compliance management platform with intelligent OCR document scanning, SARS TCS PIN verification, and Robotic Process Automation (RPA) workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
