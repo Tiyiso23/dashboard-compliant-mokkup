@@ -45,6 +45,50 @@ export type ComplianceStatus = 'COMPLIANT' | 'WARNING' | 'EXPIRED' | 'PENDING';
 
 export type GateComplianceStatus = 'PASSED' | 'ACTION REQUIRED' | 'CRITICAL NON-COMPLIANCE';
 
+export type CompanyEntityId = 'all' | 'mwx_consulting' | 'mwx_academy' | 'mwx_holdings';
+
+export interface CompanyEntity {
+  id: CompanyEntityId;
+  name: string;
+  tradingName: string;
+  registrationNumber: string;
+  taxNumber: string;
+  vatNumber?: string;
+  payeNumber?: string;
+  division: 'Consulting' | 'Academic' | 'Holdings' | 'Consolidated';
+  overallStatus: 'COMPLIANT' | 'WARNING' | 'EXPIRED';
+  activeDocumentsCount: number;
+  expiringIn30DaysCount: number;
+  sharedDriveFolder: string;
+}
+
+export interface ExternalBotPingTarget {
+  id: string;
+  name: string;
+  portalUrl: string;
+  governingBody: 'SARS' | 'CIPC' | 'SITA' | 'MICT SETA' | 'QCTO' | 'Department of Labour';
+  targetCompany: string;
+  lastPingStatus: 'ONLINE' | 'LATENCY_WARN' | 'OFFLINE';
+  lastPingTime: string;
+  latencyMs: number;
+  monitoredFolder: string;
+  verifiedDocuments: number;
+  requiresDynamicMfa: boolean;
+  mfaType?: 'OTP_SMS' | 'EMAIL_PIN' | 'DYNAMIC_TOKEN' | 'CAPTCHA';
+  mfaSessionStatus?: 'VERIFIED' | 'AWAITING_PIN' | 'NONE';
+}
+
+export interface DynamicMfaSession {
+  sessionId: string;
+  targetId: string;
+  portalName: string;
+  promptMessage: string;
+  pinType: 'TCS PIN' | 'One-Time SMS PIN' | 'Email Verification Code' | 'Dynamic Authenticator Token';
+  createdAt: string;
+  expiresInSeconds: number;
+  status: 'PENDING' | 'VERIFIED' | 'EXPIRED';
+}
+
 export interface GateDefinition {
   id: number;
   number: string;
