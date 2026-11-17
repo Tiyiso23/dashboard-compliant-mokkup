@@ -20,6 +20,7 @@ import { DocumentManagement } from './components/DocumentManagement';
 import { ReportsAnalytics } from './components/ReportsAnalytics';
 import { UserManagement } from './components/UserManagement';
 import { WorkflowAutomationView } from './components/WorkflowAutomationView';
+import { UserGuideView } from './components/UserGuideView';
 import { CheckCircle2, Bot, Scan } from 'lucide-react';
 
 export default function App() {
@@ -277,6 +278,11 @@ export default function App() {
 
             {/* View 14: User Management */}
             {activeTab === 'users' && <UserManagement />}
+
+            {/* View 15: Interactive User Guide */}
+            {activeTab === 'user-guide' && (
+              <UserGuideView onNavigateToTab={setActiveTab} />
+            )}
           </div>
         </main>
       </div>

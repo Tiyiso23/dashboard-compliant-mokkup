@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Calendar,
   CheckCircle2,
+  BookOpen,
 } from 'lucide-react';
 import { ActiveTab, SarsSubTab, AcademicSubTab, ConsultingSubTab } from '../types';
 
@@ -292,6 +293,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Users className="w-4 h-4 text-slate-400" />
             <span>User Management</span>
+          </button>
+
+          {/* User Guide */}
+          <button
+            onClick={() => onSelectTab('user-guide')}
+            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'user-guide'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <BookOpen className="w-4 h-4 text-cyan-400" />
+              <span>User Guide</span>
+            </div>
+            <span className="text-[9px] font-mono text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+              Docs
+            </span>
           </button>
         </div>
       </div>

@@ -13,7 +13,8 @@ export type ActiveTab =
   | 'automation-centre'
   | 'documents'
   | 'reports'
-  | 'users';
+  | 'users'
+  | 'user-guide';
 
 export type SarsSubTab =
   | 'all'
