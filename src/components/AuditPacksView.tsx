@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileCheck,
   Download,
@@ -13,13 +13,23 @@ import {
   Layers,
   Sparkles,
   Check,
+  Lock,
+  Send,
+  UserCheck,
 } from 'lucide-react';
 import { NON_CONFORMANCE_REPORTS } from '../data/complianceOsData';
 
-export const AuditPacksView: React.FC = () => {
+interface AuditPacksViewProps {
+  initialGateId?: number;
+}
+
+export const AuditPacksView: React.FC<AuditPacksViewProps> = ({ initialGateId }) => {
   const [selectedPackId, setSelectedPackId] = useState<string>('qcto-monitoring');
   const [isCompiling, setIsCompiling] = useState(false);
   const [compiledSuccess, setCompiledSuccess] = useState(false);
+  const [officerApprovedPacks, setOfficerApprovedPacks] = useState<Record<string, boolean>>({});
+  const [submittedPacks, setSubmittedPacks] = useState<Record<string, string>>({});
+  const [submissionNotice, setSubmissionNotice] = useState<string | null>(null);
 
   const AUDIT_PACKS = [
     {
@@ -59,6 +69,22 @@ export const AuditPacksView: React.FC = () => {
       ],
     },
     {
+      id: 'post-course-review',
+      gateId: 6,
+      title: 'Post-Course Review Pack',
+      entity: 'QAC Lead & EISA Clearance Desk',
+      dueWindow: 'Immediately following course completion prior to EISA booking',
+      status: 'PASSED',
+      readinessScore: 100.0,
+      items: [
+        { name: 'Finalized Statements of Results (SoRs) per enrolled learner', ready: true },
+        { name: 'Signed host employer & client reference letters', ready: true },
+        { name: 'Completed knowledge module Portfolios of Evidence (PoEs)', ready: true },
+        { name: 'Completed practical module Portfolios of Evidence (PoEs)', ready: true },
+        { name: 'Completed workplace logbooks & mentor sign-offs (PoEs)', ready: true },
+      ],
+    },
+    {
       id: 'eisa-readiness',
       gateId: 7,
       title: 'EISA Exam Readiness & Centre Pack',
@@ -67,13 +93,13 @@ export const AuditPacksView: React.FC = () => {
       status: 'CRITICAL NON-COMPLIANCE',
       readinessScore: 81.2,
       items: [
-        { name: 'Venue: 26 configured candidate laptops with backup power', ready: true },
+        { name: 'Venue: 26 configured candidate laptops with backup power & screens', ready: true },
         { name: 'Venue: Learner name tags, table numbers & 1.5m seating plan', ready: true },
         { name: 'Venue: Directional signage to exam room & candidate restrooms', ready: false, issue: 'Signage missing in reception lobby' },
-        { name: 'Documents: Valid SDP accreditation & QCTO candidate registers', ready: true },
+        { name: 'Documents: Valid SDP accreditation, QCTO registers, site & video reports', ready: true },
         { name: 'Documents: Synchronized wall clock mounted in examination room', ready: false, issue: 'Room 1 wall clock battery depleted' },
         { name: 'Staff: 2 registered invigilators per room ratio', ready: false, issue: 'CRITICAL: Only 1 invigilator confirmed for Room 1' },
-        { name: 'Staff: Chief Invigilator, IT support & Training Manager on standby', ready: true },
+        { name: 'Staff: Chief Invigilator, IT support, Training Manager & staff name tags', ready: true },
       ],
     },
     {
@@ -101,7 +127,7 @@ export const AuditPacksView: React.FC = () => {
       entity: 'SANAS B-BBEE Verification Agency',
       dueWindow: 'Annual financial audit & WSP/ATR submission cycle',
       status: 'PASSED',
-      readinessScore: 98.2,
+      readinessScore: 100.0,
       items: [
         { name: 'Executed learnership agreements & certified IDs', ready: true },
         { name: 'Disability medical certificates for claimed bonus points', ready: true },
@@ -113,7 +139,17 @@ export const AuditPacksView: React.FC = () => {
     },
   ];
 
+  useEffect(() => {
+    if (initialGateId) {
+      const matched = AUDIT_PACKS.find((p) => p.gateId === initialGateId);
+      if (matched) setSelectedPackId(matched.id);
+    }
+  }, [initialGateId]);
+
   const currentPack = AUDIT_PACKS.find((p) => p.id === selectedPackId) || AUDIT_PACKS[0];
+  const isGateCleared = currentPack.status === 'PASSED' && currentPack.readinessScore === 100;
+  const isApprovedByOfficer = !!officerApprovedPacks[currentPack.id];
+  const submittedTimestamp = submittedPacks[currentPack.id];
 
   const handleCompilePack = () => {
     setIsCompiling(true);
@@ -123,6 +159,27 @@ export const AuditPacksView: React.FC = () => {
       setCompiledSuccess(true);
       setTimeout(() => setCompiledSuccess(false), 4000);
     }, 1200);
+  };
+
+  const handleToggleOfficerApproval = () => {
+    if (!isGateCleared) return;
+    setOfficerApprovedPacks((prev) => ({
+      ...prev,
+      [currentPack.id]: !prev[currentPack.id],
+    }));
+  };
+
+  const handleSubmitToPortal = () => {
+    if (!isGateCleared || !isApprovedByOfficer) return;
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setSubmittedPacks((prev) => ({
+      ...prev,
+      [currentPack.id]: `Submitted at ${now} · Ref #MWX-${currentPack.gateId}09`,
+    }));
+    setSubmissionNotice(
+      `${currentPack.title} approved by Compliance Officer (Tandeeka) and dispatched to ${currentPack.entity}.`
+    );
+    setTimeout(() => setSubmissionNotice(null), 5000);
   };
 
   return (
@@ -137,7 +194,7 @@ export const AuditPacksView: React.FC = () => {
             </h2>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            Compiles complete, auditor-ready files before each QCTO monitoring, MICT SETA verification, or EISA examination session.
+            Compiles complete, auditor-ready files before each QCTO monitoring, MICT SETA verification, post-course review, or EISA examination session.
           </p>
         </div>
 
@@ -160,8 +217,18 @@ export const AuditPacksView: React.FC = () => {
         </div>
       </div>
 
+      {submissionNotice && (
+        <div className="p-3 bg-emerald-950/80 border border-emerald-700 rounded-lg text-xs text-emerald-200 flex items-center justify-between font-mono">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{submissionNotice}</span>
+          </div>
+          <button onClick={() => setSubmissionNotice(null)} className="text-emerald-400 hover:text-white">✕</button>
+        </div>
+      )}
+
       {/* Audit Pack Selector Tabs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         {AUDIT_PACKS.map((pack) => {
           const isSelected = selectedPackId === pack.id;
           let badgeColor = 'text-emerald-400 bg-emerald-950 border-emerald-800';
@@ -195,6 +262,80 @@ export const AuditPacksView: React.FC = () => {
             </button>
           );
         })}
+      </div>
+
+      {/* Compliance Officer (Tandeeka) Gate-Locked Submission Control Bar */}
+      <div
+        className={`p-4 rounded-xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+          !isGateCleared
+            ? 'bg-rose-950/20 border-rose-500/40'
+            : submittedTimestamp
+            ? 'bg-emerald-950/30 border-emerald-500/40'
+            : 'bg-slate-900/90 border-cyan-500/40'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className={`p-2 rounded-lg border shrink-0 ${
+              !isGateCleared
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+            }`}
+          >
+            {!isGateCleared ? <Lock className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+          </div>
+          <div className="space-y-0.5">
+            <div className="text-xs font-bold text-white flex items-center gap-2">
+              <span>Compliance Officer Approval &amp; Portal Submission Lock</span>
+              <span className="text-[10px] font-mono text-slate-400">(Accountable: Tandeeka)</span>
+            </div>
+            <p className="text-xs text-slate-300">
+              {!isGateCleared
+                ? `HARD BLOCK ACTIVE: Gate 0${currentPack.gateId} readiness is ${currentPack.readinessScore}% (${currentPack.status}). Nothing may be submitted to ${currentPack.entity} until every gap and NCR is cleared to 100%.`
+                : submittedTimestamp
+                ? `Submission confirmed (${submittedTimestamp}). Evidence archived in Cohorts / [cohort] / Site visits.`
+                : `Gate 0${currentPack.gateId} cleared at 100%. Agent has prepared the submission file—Compliance Officer approval unlocks portal dispatch.`}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <button
+            onClick={handleToggleOfficerApproval}
+            disabled={!isGateCleared || !!submittedTimestamp}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded border transition-colors ${
+              !isGateCleared
+                ? 'bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed'
+                : isApprovedByOfficer
+                ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
+                : 'bg-slate-950 text-cyan-300 border-cyan-700 hover:bg-cyan-950'
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>{isApprovedByOfficer ? 'Tandeeka Approved' : 'Approve as Compliance Officer'}</span>
+          </button>
+
+          <button
+            onClick={handleSubmitToPortal}
+            disabled={!isGateCleared || !isApprovedByOfficer || !!submittedTimestamp}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded transition-colors ${
+              !isGateCleared || !isApprovedByOfficer
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                : submittedTimestamp
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
+                : 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-sm'
+            }`}
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>
+              {submittedTimestamp
+                ? 'Submitted to Portal'
+                : !isGateCleared
+                ? 'Blocked by Gate Lock'
+                : 'Submit to SETA / QCTO Portal'}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Main Report Structure (The 4 Standard Report Sections) */}

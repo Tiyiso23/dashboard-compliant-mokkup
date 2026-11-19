@@ -32,6 +32,19 @@ export const RaciMatrixView: React.FC = () => {
         </div>
       </div>
 
+      {/* 17 September 1:1 Governance Ownership Callout */}
+      <div className="p-4 rounded-lg bg-cyan-950/30 border border-cyan-500/30 flex items-start gap-3">
+        <UserCheck className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+        <div className="text-xs space-y-1">
+          <div className="font-bold text-cyan-300">
+            Day-to-Day Document Ownership (Agreed 17 September 1:1)
+          </div>
+          <p className="text-slate-300 leading-relaxed">
+            The <strong>Tender and Procurement Administrator</strong> owns compliance document management day to day, while the <strong>Mindworx Compliance Agent</strong> handles continuous automated checking, expiry escalation, and evaluator audit pack compilation.
+          </p>
+        </div>
+      </div>
+
       {/* RACI Definition Legend */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800">

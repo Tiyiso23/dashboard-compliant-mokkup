@@ -21,12 +21,21 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   return (
     <header className="flex items-center justify-between gap-8 px-6 py-3.5 border-b border-slate-800 bg-slate-950 sticky top-0 z-40 select-none">
-      {/* Zone 1: Single text element wordmark */}
+      {/* Zone 1: Brand logo & ComplianceOS wordmark */}
       <button
         onClick={() => onSelectTab('dashboard')}
-        className="text-base font-bold tracking-tight text-white whitespace-nowrap shrink-0 flex items-center gap-2 text-left hover:text-cyan-400 transition-colors"
+        className="whitespace-nowrap shrink-0 flex items-center gap-2.5 text-left group"
       >
-        <span>MINDWORX COMPLIANCE</span>
+        <span className="bg-white px-2.5 py-1 rounded-md shadow-sm flex items-center">
+          <img
+            src="/assets/aistudio/img-34707eba-2c5c-4719-9cfd-452e8650488f_f9c7d6f3.png"
+            alt="Mindworx"
+            className="h-4 w-auto object-contain"
+          />
+        </span>
+        <span className="text-sm font-bold tracking-tight text-cyan-400 group-hover:text-cyan-300 transition-colors">
+          ComplianceOS
+        </span>
       </button>
 
       {/* Zone 2: 4-5 concise single-line text navigation links */}

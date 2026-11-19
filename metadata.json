@@ -1,6 +1,6 @@
 {
-  "name": "Mindworx Compliance - OCR & RPA Automation Dashboard",
-  "description": "Enterprise compliance management platform with intelligent OCR document scanning, SARS TCS PIN verification, and Robotic Process Automation (RPA) workflows.",
+  "name": "ComplianceOS — Mindworx AI-Powered Compliance & Quality Assurance Management System",
+  "description": "ComplianceOS is an AI-powered compliance and quality assurance management prototype developed for Mindworx Academy. Intelligent compliance. Automated assurance. Audit-ready operations across nine operational compliance gates.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

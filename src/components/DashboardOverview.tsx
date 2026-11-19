@@ -31,12 +31,14 @@ import {
   DynamicMfaSession,
   ActiveTab,
   SarsSubTab,
+  GateDefinition,
 } from '../types';
 import { COMPANY_ENTITIES, BOT_PING_TARGETS, INITIAL_DYNAMIC_MFA_SESSIONS } from '../data/mockComplianceData';
-import { COMPLIANCE_GATES, NON_CONFORMANCE_REPORTS } from '../data/complianceOsData';
+import { COMPLIANCE_GATES, EXPIRY_RISK_RULES } from '../data/complianceOsData';
 
 interface DashboardOverviewProps {
   documents: ComplianceDocument[];
+  gates?: GateDefinition[];
   onNavigateToTab: (tab: ActiveTab) => void;
   onNavigateToSarsSubTab: (subTab: SarsSubTab) => void;
   onTriggerRpa: (action: string) => void;
@@ -44,6 +46,7 @@ interface DashboardOverviewProps {
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   documents,
+  gates: propGates,
   onNavigateToTab,
   onNavigateToSarsSubTab,
   onTriggerRpa,
@@ -63,7 +66,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   });
   const [pinNotice, setPinNotice] = useState<string | null>(null);
 
-  const gates = COMPLIANCE_GATES;
+  const gates = propGates || COMPLIANCE_GATES;
   const passedGates = gates.filter((g) => g.status === 'PASSED').length;
   const actionGates = gates.filter((g) => g.status === 'ACTION REQUIRED').length;
   const criticalGates = gates.filter((g) => g.status === 'CRITICAL NON-COMPLIANCE').length;
@@ -148,18 +151,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-semibold">
-              Mindworx Compliance Agent (ComplianceOS)
+              ComplianceOS · AI &amp; Business Process Automation
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">· Multi-Company Architecture</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-semibold">
-              Automated Tracking & Manual Intervention Active
+            <span className="text-[10px] text-slate-400 font-mono">
+              · Intelligent compliance. Automated assurance. Audit-ready operations.
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Master Compliance Dashboard
+            ComplianceOS — Mindworx AI-Powered Compliance &amp; Quality Assurance Management System
           </h1>
           <p className="text-sm text-slate-400 max-w-3xl leading-relaxed">
-            Consolidated regulatory oversight featuring automated bots pinging external websites, Google Shared Drive document validity tracking, and human manual intervention for dynamic OTP/TCS PIN verification.
+            Automates document verification, compliance monitoring, expiry alerts and regulatory readiness across nine operational compliance gates—combining AI-powered document intelligence, rules-based validation and authorized human approval so learner, staff and organisational records stay complete, traceable and audit-ready.
           </p>
         </div>
 
@@ -547,6 +549,40 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           })}
         </div>
       </div>
+
+      {/* ComplianceOS Gate Pulse & Google Workspace Architecture Bar */}
+      <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-sm font-bold text-white">
+              ComplianceOS Process Map Pulse (9 Automated Gates &amp; {EXPIRY_RISK_RULES.length} Expiry Rules)
+            </h3>
+          </div>
+          <p className="text-xs text-slate-400">
+            Phyllis Muthombeni QAC Specification (14 Oct 2026) · Google Workspace + Lucid Architecture ·{' '}
+            <span className="text-emerald-400 font-mono">{passedGates} Passed</span> ·{' '}
+            <span className="text-amber-400 font-mono">{actionGates} Action Required</span> ·{' '}
+            <span className="text-rose-400 font-mono">{criticalGates} Critical Block</span>
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <button
+            onClick={() => onNavigateToTab('compliance-gates')}
+            className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded transition-colors"
+          >
+            Inspect 9 Gates
+          </button>
+          <button
+            onClick={() => onNavigateToTab('architecture')}
+            className="px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded transition-colors shadow-sm"
+          >
+            Agent Architecture &amp; Roadmap →
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
+

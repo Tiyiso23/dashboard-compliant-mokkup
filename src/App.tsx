@@ -20,6 +20,7 @@ import { DocumentManagement } from './components/DocumentManagement';
 import { ReportsAnalytics } from './components/ReportsAnalytics';
 import { UserManagement } from './components/UserManagement';
 import { WorkflowAutomationView } from './components/WorkflowAutomationView';
+import { AgentArchitectureView } from './components/AgentArchitectureView';
 import { UserGuideView } from './components/UserGuideView';
 import { CheckCircle2, Bot, Scan } from 'lucide-react';
 
@@ -34,6 +35,7 @@ export default function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isAuditing, setIsAuditing] = useState(false);
   const [globalBanner, setGlobalBanner] = useState<string | null>(null);
+  const [auditPackGateId, setAuditPackGateId] = useState<number | undefined>(undefined);
 
   // Sync theme with html class
   useEffect(() => {
@@ -163,6 +165,7 @@ export default function App() {
             {activeTab === 'dashboard' && (
               <DashboardOverview
                 documents={documents}
+                gates={gates}
                 onNavigateToTab={setActiveTab}
                 onNavigateToSarsSubTab={(sub) => {
                   setActiveTab('sars');
@@ -182,12 +185,20 @@ export default function App() {
               />
             )}
 
+            {/* View 1.75: Agent Architecture, Google Workspace Stack & Build Roadmap */}
+            {activeTab === 'architecture' && (
+              <AgentArchitectureView onNavigateToTab={setActiveTab} />
+            )}
+
             {/* View 2: The 9 Automated Compliance Gates (Process Map Core) */}
             {activeTab === 'compliance-gates' && (
               <ComplianceGatesView
                 gates={gates}
                 onTriggerGateCheck={handleTriggerGateCheck}
-                onNavigateToAuditPacks={(_gateId) => setActiveTab('audit-packs')}
+                onNavigateToAuditPacks={(gateId) => {
+                  setAuditPackGateId(gateId);
+                  setActiveTab('audit-packs');
+                }}
               />
             )}
 
@@ -200,10 +211,31 @@ export default function App() {
             )}
 
             {/* View 4: Site Visit & Evaluation Audit Packs */}
-            {activeTab === 'audit-packs' && <AuditPacksView />}
+            {activeTab === 'audit-packs' && (
+              <AuditPacksView initialGateId={auditPackGateId} />
+            )}
 
             {/* View 5: EISA Examination Readiness (Gate 7 Venue & Staffing Scorer) */}
-            {activeTab === 'eisa-readiness' && <EisaReadinessView />}
+            {activeTab === 'eisa-readiness' && (
+              <EisaReadinessView
+                onGate7StatusChange={(status, readinessScore, verifiedCount, totalCount) => {
+                  setGates((prev) =>
+                    prev.map((g) =>
+                      g.id === 7
+                        ? {
+                            ...g,
+                            status,
+                            readinessScore,
+                            itemsVerified: verifiedCount,
+                            itemsTotal: totalCount,
+                            findingsCount: totalCount - verifiedCount,
+                          }
+                        : g
+                    )
+                  );
+                }}
+              />
+            )}
 
             {/* View 6: Learnership Cohorts Progression Trail */}
             {activeTab === 'cohorts' && <CohortsProgressView />}

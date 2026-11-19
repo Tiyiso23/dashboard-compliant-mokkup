@@ -5,6 +5,13 @@ import {
   EisaChecklistItem,
   NonConformanceReport,
   RaciItem,
+  AgentTriggerSpec,
+  ExpiryRiskRule,
+  GoogleWorkspaceLayer,
+  DriveFolderNode,
+  RoadmapPhase,
+  ConfirmedDecision,
+  SpecNextStep,
 } from '../types';
 
 export const COMPLIANCE_GATES: GateDefinition[] = [
@@ -1025,3 +1032,322 @@ export const RACI_MATRIX: RaciItem[] = [
     recruitment: 'I',
   },
 ];
+
+export const AGENT_TRIGGERS: AgentTriggerSpec[] = [
+  {
+    id: 'trg-upload',
+    label: '1. Document Uploaded',
+    sourceEvent: 'Google Form learner upload or Shared Drive drop into Compliance / Cohort folders',
+    agentJob: 'Job 1 · Check documents as they arrive (OCR, stamp age, legibility, signatures)',
+    affectedGates: [1, 3, 8],
+    sampleAction:
+      'Gemini called from Apps Script inspects PDF/image, checks SAPS stamp <= 3 months, updates Master Register Google Sheet row, and sends learner missing-item notice if rejected.',
+    outputReportSection: 'Gap Analysis Matrix & Non-Conformance Report (NCR)',
+  },
+  {
+    id: 'trg-reg',
+    label: '2. Learner Registration Status Changes',
+    sourceEvent: 'SETA Proof of Registration or QCTO Enrolment state transitions to Registered',
+    agentJob: 'Job 2 & 3 · Activate QCTO monitoring countdown and bind cohort pack milestones',
+    affectedGates: [2, 4, 9],
+    sampleAction:
+      'Starts the QCTO 21-day to 2-month monitoring clock in Google Calendar, schedules 2-week early file gap check, and reconciles WSP/ATR seat counts.',
+    outputReportSection: 'Executive Summary & Calendar Countdown Escalation',
+  },
+  {
+    id: 'trg-expiry',
+    label: '3. Expiry Alert Window Opens',
+    sourceEvent: 'Daily Apps Script cron scan detects threshold breach (12m / 90d / 60d / 30d / 2d)',
+    agentJob: 'Job 2 · Track expiry dates before they lapse & enforce automatic blocks',
+    affectedGates: [3, 4, 5, 8],
+    sampleAction:
+      'Dispatches Gmail escalation cadence (e.g., 60d, 30d, then every 2 days for SLAs/leases/insurance) and blocks expired assessors from signing PoEs.',
+    outputReportSection: 'Corrective Action Plan (CAP) naming owner & due date',
+  },
+  {
+    id: 'trg-visit',
+    label: '4. Site Visit or EISA Date Booked',
+    sourceEvent: 'QCTO Monitoring, MICT SETA Verification, or EISA exam event added to Google Calendar',
+    agentJob: 'Job 3 · Compile complete audit files before each site visit & score venue readiness',
+    affectedGates: [4, 5, 6, 7],
+    sampleAction:
+      'Assembles full audit pack in Cohorts / [cohort] / Site visits, flags missing moderator booking or invigilator ratios, and awaits Compliance Officer (Tandeeka) approval before portal submission.',
+    outputReportSection: '4-Section Evaluator Dossier (Exec Summary, Matrix, NCRs, CAP)',
+  },
+];
+
+export const EXPIRY_RISK_RULES: ExpiryRiskRule[] = [
+  {
+    id: 'exp-01',
+    item: 'SDP / provider accreditation',
+    firstAlert: '12 months before',
+    escalation: '6 months, then 90 days',
+    onExpiry: 'Block new cohorts and site-visit submissions',
+    severityOnLapse: 'CRITICAL NON-COMPLIANCE',
+    affectedGates: [2, 4, 5, 7, 8],
+  },
+  {
+    id: 'exp-02',
+    item: 'Assessor / moderator registration (3-year cycle)',
+    firstAlert: '90 days before',
+    escalation: '30 days',
+    onExpiry: 'Block from PoE sign-off and moderation',
+    severityOnLapse: 'CRITICAL NON-COMPLIANCE',
+    affectedGates: [3, 4, 5],
+  },
+  {
+    id: 'exp-03',
+    item: 'Mindworx SLAs with assessors and facilitators',
+    firstAlert: '60 days before',
+    escalation: '30 days, then every 2 days',
+    onExpiry: 'Block from session allocation',
+    severityOnLapse: 'CRITICAL NON-COMPLIANCE',
+    affectedGates: [3, 5, 8],
+  },
+  {
+    id: 'exp-04',
+    item: 'Lease, public liability, tax compliance, OHS appointment',
+    firstAlert: '60 days before',
+    escalation: '30 days, then every 2 days',
+    onExpiry: 'Accreditation pack marked incomplete',
+    severityOnLapse: 'CRITICAL NON-COMPLIANCE',
+    affectedGates: [4, 8],
+  },
+  {
+    id: 'exp-05',
+    item: 'Certified learner ID copies (3-month limit)',
+    firstAlert: 'At upload',
+    escalation: '—',
+    onExpiry: 'Reject and request re-certification',
+    severityOnLapse: 'CRITICAL NON-COMPLIANCE',
+    affectedGates: [1, 4, 9],
+  },
+  {
+    id: 'exp-06',
+    item: 'Host employer / workplace agreements',
+    firstAlert: '90 days before',
+    escalation: '30 days',
+    onExpiry: 'Flag cohort at risk',
+    severityOnLapse: 'ACTION REQUIRED',
+    affectedGates: [1, 4, 6, 9],
+  },
+  {
+    id: 'exp-07',
+    item: 'QCTO monitoring window',
+    firstAlert: 'Registration date',
+    escalation: '2 weeks before window opens',
+    onExpiry: 'File gaps escalated to QAC lead',
+    severityOnLapse: 'CRITICAL NON-COMPLIANCE',
+    affectedGates: [2, 4],
+  },
+];
+
+export const GOOGLE_WORKSPACE_STACK: GoogleWorkspaceLayer[] = [
+  {
+    layer: 'Process maps',
+    tool: 'Lucid',
+    purpose: 'One flow per gate; the agreed source for the agent’s rules',
+  },
+  {
+    layer: 'Document store',
+    tool: 'Google Drive (Shared Drive)',
+    purpose: 'Every learner, staff and company document in a fixed folder structure',
+  },
+  {
+    layer: 'Master register',
+    tool: 'Google Sheets',
+    purpose: 'One row per document: owner, type, certified date, expiry date, status',
+  },
+  {
+    layer: 'Learner uploads',
+    tool: 'Google Forms',
+    purpose: 'Learners upload certified ID, qualification and CV straight into their Drive folder',
+  },
+  {
+    layer: 'Document checks',
+    tool: 'Gemini, called from Apps Script',
+    purpose: 'Reads each upload; checks legibility, stamp, certification date and signatures; writes the result to the register',
+  },
+  {
+    layer: 'Schedules',
+    tool: 'Google Calendar',
+    purpose: 'QCTO monitoring windows, verification visits, EISA dates and renewal deadlines',
+  },
+  {
+    layer: 'Automation and alerts',
+    tool: 'Google Apps Script + Gmail',
+    purpose: 'Daily expiry check; alerts at 60 and 30 days, then every 2 days; compiles audit packs into a Drive folder',
+  },
+  {
+    layer: 'Reporting',
+    tool: 'Looker Studio',
+    purpose: 'Stakeholder dashboards built on the register',
+  },
+  {
+    layer: 'Submissions',
+    tool: 'MICT SETA and QCTO portals',
+    purpose: 'Agent prepares the application; submits once the Compliance Officer approves',
+  },
+];
+
+export const GOOGLE_DRIVE_TREE: DriveFolderNode[] = [
+  {
+    id: 'drv-company',
+    path: 'Compliance / Company',
+    label: 'Company Statutory & Accreditation Vault',
+    description: 'Corporate statutory, tax, premises, and accreditation evidence.',
+    contents: [
+      'SDP Accreditation Letters (MICT SETA & QCTO)',
+      'Physical Premises Lease Agreement',
+      'SARS Tax Compliance Status (TCS PIN)',
+      'Public Liability Insurance Certificate',
+      'OHS Representative Appointment & First Aid Checklist',
+      'CIPC Registration, CSD Report & 3-Month Bank Letter / Director IDs',
+    ],
+    requiredGates: [4, 5, 7, 8],
+  },
+  {
+    id: 'drv-staff',
+    path: 'Compliance / Staff',
+    label: 'Facilitator, Assessor & Moderator Folders',
+    description: 'One dedicated folder per practitioner with 3-year cycle tracking.',
+    contents: [
+      '[Practitioner] / Certified ID or Passport (<= 3 months)',
+      '[Practitioner] / Updated CV & Certified Qualifications',
+      '[Practitioner] / Assessor / Moderator Registration Letter & Scope',
+      '[Practitioner] / Signed Mindworx SLA',
+    ],
+    requiredGates: [3, 4, 5, 8],
+  },
+  {
+    id: 'drv-learners',
+    path: 'Cohorts / [cohort] / Learners / [learner]',
+    label: 'Individual Learner Dossiers',
+    description: 'Auto-populated via Google Forms onboarding submissions.',
+    contents: [
+      'EA1 Learnership Agreement (+ Fixed-Term / Affordability / Bank SETA set)',
+      'Certified ID Copy or Passport (<= 3 months stamp check)',
+      'Certified Highest Qualification / Matric & Updated CV',
+      'SETA / QCTO Proof of Registration Letter',
+      'Completed Knowledge, Practical & Workplace PoEs + SoR',
+    ],
+    requiredGates: [1, 2, 4, 5, 6, 9],
+  },
+  {
+    id: 'drv-site-visits',
+    path: 'Cohorts / [cohort] / Site visits',
+    label: 'Compiled Site Visit & EISA Audit Packs',
+    description: 'Compiled by Apps Script before evaluator arrival and Tandeeka sign-off.',
+    contents: [
+      'QCTO Monitoring Pack (Window: 21d to 2 months post-registration)',
+      'MICT SETA External Verification File + Moderator Booking',
+      'Post-Course Review & Client Reference Pack',
+      'EISA Venue, Document & Staffing Readiness Scorecard',
+    ],
+    requiredGates: [4, 5, 6, 7],
+  },
+];
+
+export const BUILD_ROADMAP_PHASES: RoadmapPhase[] = [
+  {
+    phase: 1,
+    title: 'Phase 1 · Foundation',
+    focus: 'Google Drive hierarchy, Master Register Sheet & expiry alerts',
+    deliverables: [
+      'Provision fixed Shared Drive structure (Compliance & Cohorts)',
+      'Populate Master Document Register in Google Sheets with staff, assessor & company expiry dates',
+      'Activate daily Google Apps Script + Gmail expiry escalation cron',
+    ],
+    status: 'IN_PROGRESS',
+  },
+  {
+    phase: 2,
+    title: 'Phase 2 · Onboarding & Registration',
+    focus: 'Stop recurring ID stamp & contract errors before SETA/QCTO upload',
+    deliverables: [
+      'Google Forms upload -> Gemini Apps Script legibility & 3-month stamp check',
+      'Automatic agreement set selection (Employed, Unemployed, Bank)',
+      'Draft MICT SETA bulk upload CSV & QCTO enrolment forms from verified rows',
+    ],
+    status: 'NEXT',
+  },
+  {
+    phase: 3,
+    title: 'Phase 3 · Site Visit Files',
+    focus: 'Automated audit dossier compilation & readiness scores',
+    deliverables: [
+      'QCTO monitoring pack triggered 2 weeks before 21d–2m window opens',
+      'MICT SETA verification pack, SoR drafting & post-course review gate',
+      'New qualification accreditation pack readiness scoring',
+    ],
+    status: 'PLANNED',
+  },
+  {
+    phase: 4,
+    title: 'Phase 4 · EISA & B-BBEE',
+    focus: 'Exam day clearance & client B-BBEE self-service evidence feed',
+    deliverables: [
+      'EISA venue, document & 2-invigilator-per-room readiness gate',
+      'B-BBEE evidence assembly (stipends, payslips, absorption, disability)',
+      'Looker Studio & portal sync feeds on WSP/ATR reconciliation',
+    ],
+    status: 'PLANNED',
+  },
+];
+
+export const CONFIRMED_DECISIONS: ConfirmedDecision[] = [
+  {
+    question: 'Certified ID copies',
+    decision: 'Must be certified within the last 3 months (Non-SA requires certified passport)',
+  },
+  {
+    question: 'Assessor & moderator registration',
+    decision: 'Renews every 3 years; alerts at 90 and 30 days before expiry; blocks PoE sign-off',
+  },
+  {
+    question: 'Alerts for SLAs, leases and insurance',
+    decision: '60 days and 30 days before expiry, then every 2 days until renewed',
+  },
+  {
+    question: 'Governing bodies and submissions',
+    decision: 'MICT SETA and QCTO; the agent prepares the files and submits once Compliance Officer approves',
+  },
+  {
+    question: 'Platform',
+    decision: 'Google Workspace (Drive, Sheets, Forms, Apps Script, Gemini, Calendar, Looker Studio), with Lucid for process maps',
+  },
+];
+
+export const SPEC_NEXT_STEPS: SpecNextStep[] = [
+  {
+    id: 'ns-01',
+    owner: 'Phyllis Muthombeni',
+    task: 'Review and sign off the 14 October Process Map & Agent Specification',
+    completed: true,
+  },
+  {
+    id: 'ns-02',
+    owner: 'Compliance / Ops Team',
+    task: 'Populate the Master Document Register with current expiry dates from the Shared Drive',
+    completed: false,
+  },
+  {
+    id: 'ns-03',
+    owner: 'Team',
+    task: 'Draw the 9 gate process flows in Lucid from this specification document',
+    completed: false,
+  },
+  {
+    id: 'ns-04',
+    owner: 'Developer',
+    task: 'Build the Compliance SOP and agent validation instructions from Gates 1–9',
+    completed: false,
+  },
+  {
+    id: 'ns-05',
+    owner: 'Developer',
+    task: 'Set up the Google Workspace platform, then build Phase 1 and test it against one live cohort',
+    completed: false,
+  },
+];
+

@@ -23,6 +23,7 @@ import {
   KeyRound,
   Clock,
   ChevronRight,
+  Cpu,
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
@@ -149,6 +150,35 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ],
     rulesOrTips: [
       'Stage 4 enforces the 3-Month Certified ID rule automatically—any SAPS stamp older than 90 days raises a hard block on Gate 01.',
+    ],
+  },
+  {
+    id: 'architecture-roadmap',
+    number: '03B',
+    title: 'Agent Architecture, Google Workspace Stack & Build Roadmap',
+    subtitle: '4 Triggers, 3 Jobs, 4 Outputs, Shared Drive tree, Confirmed Decisions & Sign-Off',
+    targetTab: 'architecture',
+    targetTabLabel: 'Open Architecture & Roadmap',
+    roles: ['All Roles', 'Compliance Officer', 'QAC Lead', 'Managing Director'],
+    icon: <Cpu className="w-4 h-4 text-cyan-400" />,
+    overview:
+      'Captures the full 14 October 2026 agent blueprint: 4 event triggers, 3 continuous jobs, 9-layer Google Workspace + Lucid stack, fixed Shared Drive directory layout, 4-phase rollout roadmap, and sign-off checklist.',
+    steps: [
+      {
+        heading: 'Inspect Triggers, Jobs & Report Outputs',
+        detail:
+          'Click any of the 4 Triggers (Document Upload, Registration Status Change, Expiry Window, Site Visit/EISA Date) to trace how ComplianceOS routes tasks into the 4-section evaluator report format.',
+      },
+      {
+        heading: 'Browse the Google Workspace Stack & Shared Drive Tree',
+        detail:
+          'Review all 9 platform layers (Lucid, Shared Drive, Google Sheets, Google Forms, Gemini via Apps Script, Calendar, Gmail, Looker Studio, MICT SETA/QCTO portals) and expand the 4 standardized Shared Drive paths.',
+      },
+      {
+        heading: 'Track Decisions Confirmed & Sign-Off Checklist',
+        detail:
+          'Simulate expiry breach blocks across all 7 statutory rules and track team completion on the 5 deployment Next Steps.',
+      },
     ],
   },
   {
@@ -342,11 +372,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
 ];
 
 const EXPIRY_RULES_SUMMARY = [
-  { item: 'SDP / Provider Accreditation', firstAlert: '12 months before', escalation: '6 months, then 90 days', onExpiry: 'Block new cohorts & site visits' },
-  { item: 'Assessor / Moderator Reg (3-Yr)', firstAlert: '90 days before', escalation: '30 days before', onExpiry: 'Block PoE sign-off & moderation' },
-  { item: 'Mindworx SLAs, Leases, Insurance & OHS', firstAlert: '60 days before', escalation: '30 days, then every 2 days', onExpiry: 'Block allocation / mark pack incomplete' },
-  { item: 'Certified Learner IDs (3-Mo Rule)', firstAlert: 'At upload', escalation: 'Immediate flag', onExpiry: 'Reject & request fresh certification' },
-  { item: 'QCTO Monitoring Window (21d–2mo)', firstAlert: 'At registration date', escalation: '2 weeks before window opens', onExpiry: 'Escalate gaps to QAC Lead' },
+  { item: 'SDP / provider accreditation', firstAlert: '12 months before', escalation: '6 months, then 90 days', onExpiry: 'Block new cohorts and site-visit submissions' },
+  { item: 'Assessor / moderator registration (3-year cycle)', firstAlert: '90 days before', escalation: '30 days', onExpiry: 'Block from PoE sign-off and moderation' },
+  { item: 'Mindworx SLAs with assessors and facilitators', firstAlert: '60 days before', escalation: '30 days, then every 2 days', onExpiry: 'Block from session allocation' },
+  { item: 'Lease, public liability, tax compliance, OHS appointment', firstAlert: '60 days before', escalation: '30 days, then every 2 days', onExpiry: 'Accreditation pack marked incomplete' },
+  { item: 'Certified learner ID copies (3-month limit)', firstAlert: 'At upload', escalation: '—', onExpiry: 'Reject and request re-certification' },
+  { item: 'Host employer / workplace agreements', firstAlert: '90 days before', escalation: '30 days', onExpiry: 'Flag cohort at risk' },
+  { item: 'QCTO monitoring window', firstAlert: 'Registration date', escalation: '2 weeks before window opens', onExpiry: 'File gaps escalated to QAC lead' },
 ];
 
 export const UserGuideView: React.FC<UserGuideViewProps> = ({ onNavigateToTab }) => {

@@ -295,9 +295,16 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({
           <div className="bg-slate-900 border border-slate-800 rounded-lg max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between border-b border-slate-800 pb-3">
               <div>
+                <div className="bg-white px-2.5 py-1 rounded inline-flex items-center mb-2">
+                  <img
+                    src="/assets/aistudio/img-34707eba-2c5c-4719-9cfd-452e8650488f_f9c7d6f3.png"
+                    alt="Mindworx"
+                    className="h-4 w-auto object-contain"
+                  />
+                </div>
                 <div className="text-[10px] font-mono text-cyan-400 uppercase">OFFICIAL REGULATORY DOSSIER</div>
-                <h3 className="text-lg font-bold text-slate-100 mt-0.5">Mindworx Compliance Audit Pack 2026</h3>
-                <div className="text-xs text-slate-400">Prepared for Government Tender & Banking Vendor Onboarding</div>
+                <h3 className="text-lg font-bold text-slate-100 mt-0.5">Mindworx ComplianceOS Audit Pack 2026</h3>
+                <div className="text-xs text-slate-400">Prepared for Government Tender &amp; Banking Vendor Onboarding</div>
               </div>
               <button
                 onClick={() => setShowFullDossier(false)}

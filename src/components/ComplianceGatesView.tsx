@@ -30,8 +30,29 @@ export const ComplianceGatesView: React.FC<ComplianceGatesViewProps> = ({
   onNavigateToAuditPacks,
 }) => {
   const [selectedPillar, setSelectedPillar] = useState<string>('All');
-  const [expandedGate, setExpandedGate] = useState<number | null>(4); // Gate 4 open by default
+  const [expandedGate, setExpandedGate] = useState<number | null>(1); // Gate 1 or 4 open
   const [runningGateId, setRunningGateId] = useState<number | null>(null);
+
+  // Interactive Gate 01 Agreement Set & Identity Pre-Check Simulator
+  const [simLearnerType, setSimLearnerType] = useState<'Employed' | 'Unemployed' | 'Bank'>('Unemployed');
+  const [simNationality, setSimNationality] = useState<'RSA' | 'Non-SA'>('RSA');
+  const [simStampValid, setSimStampValid] = useState<boolean>(false);
+
+  const requiredAgreementsByType: Record<'Employed' | 'Unemployed' | 'Bank', string[]> = {
+    Employed: ['EA1 Learnership Agreement (Tripartite)', 'Employer Confirmation & Workplace Letter'],
+    Unemployed: [
+      'EA1 Learnership Agreement',
+      'Fixed-Term Contract (Programme Duration)',
+      'Unemployed Affordability Form',
+    ],
+    Bank: ['EA1 Learnership Agreement', 'SETA Agreement (Banking Host Employer)'],
+  };
+
+  const simIdentityDoc =
+    simNationality === 'RSA'
+      ? 'Certified South African ID Copy'
+      : 'Certified Non-South African Passport';
+  const simCleared = simStampValid;
 
   const pillars = ['All', 'QCTO', 'MICT SETA', 'Document QA', 'B-BBEE'];
 
@@ -246,6 +267,145 @@ export const ComplianceGatesView: React.FC<ComplianceGatesViewProps> = ({
                       <p className="text-slate-300 leading-relaxed">{gate.systemAction}</p>
                     </div>
                   </div>
+
+                  {/* Gate 01 Interactive Agreement Set & Identity Rule Simulator */}
+                  {gate.id === 1 && (
+                    <div className="p-4 rounded-lg bg-slate-950 border border-cyan-500/30 space-y-3 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider font-semibold">
+                            INTERACTIVE GATE 01 RULE ENGINE · LEARNER TYPE & IDENTITY PRE-CHECK
+                          </div>
+                          <div className="text-xs text-slate-300 mt-0.5">
+                            Agent selects required agreement pack by learner category and enforces the 3-month stamp & passport rules.
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded border shrink-0 ${
+                            simCleared
+                              ? 'text-emerald-300 bg-emerald-950 border-emerald-800'
+                              : 'text-rose-300 bg-rose-950 border-rose-800'
+                          }`}
+                        >
+                          {simCleared ? 'PASSED · READY FOR GATE 02' : 'BLOCKED · DEFICIENCY SENT'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* Learner Type Selector */}
+                        <div className="p-3 rounded bg-slate-900 border border-slate-800 space-y-2">
+                          <div className="text-[10px] font-mono text-slate-400 uppercase">
+                            1. Learner Type
+                          </div>
+                          <div className="flex gap-1.5">
+                            {(['Employed', 'Unemployed', 'Bank'] as const).map((lt) => (
+                              <button
+                                key={lt}
+                                onClick={() => setSimLearnerType(lt)}
+                                className={`flex-1 py-1.5 px-2 rounded text-[11px] font-semibold transition-colors ${
+                                  simLearnerType === lt
+                                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
+                                    : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                                }`}
+                              >
+                                {lt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Nationality Selector */}
+                        <div className="p-3 rounded bg-slate-900 border border-slate-800 space-y-2">
+                          <div className="text-[10px] font-mono text-slate-400 uppercase">
+                            2. Citizenship Rule
+                          </div>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => setSimNationality('RSA')}
+                              className={`flex-1 py-1.5 px-2 rounded text-[11px] font-semibold transition-colors ${
+                                simNationality === 'RSA'
+                                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
+                                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                              }`}
+                            >
+                              South African ID
+                            </button>
+                            <button
+                              onClick={() => setSimNationality('Non-SA')}
+                              className={`flex-1 py-1.5 px-2 rounded text-[11px] font-semibold transition-colors ${
+                                simNationality === 'Non-SA'
+                                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
+                                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                              }`}
+                            >
+                              Non-SA Passport
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Certification Stamp Age */}
+                        <div className="p-3 rounded bg-slate-900 border border-slate-800 space-y-2">
+                          <div className="text-[10px] font-mono text-slate-400 uppercase">
+                            3. SAPS Certification Stamp
+                          </div>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => setSimStampValid(true)}
+                              className={`flex-1 py-1.5 px-2 rounded text-[11px] font-semibold transition-colors ${
+                                simStampValid
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
+                                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                              }`}
+                            >
+                              &le; 3 Months
+                            </button>
+                            <button
+                              onClick={() => setSimStampValid(false)}
+                              className={`flex-1 py-1.5 px-2 rounded text-[11px] font-semibold transition-colors ${
+                                !simStampValid
+                                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50'
+                                  : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                              }`}
+                            >
+                              &gt; 3 Months
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded bg-slate-900/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="text-[10px] font-mono text-slate-400 uppercase">
+                            Auto-Selected Agreement Set & Identity Check ({simLearnerType} · {simNationality})
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {requiredAgreementsByType[simLearnerType].map((doc) => (
+                              <span
+                                key={doc}
+                                className="px-2 py-0.5 rounded bg-slate-950 text-cyan-300 border border-slate-800 font-mono text-[11px]"
+                              >
+                                {doc}
+                              </span>
+                            ))}
+                            <span
+                              className={`px-2 py-0.5 rounded font-mono text-[11px] border ${
+                                simCleared
+                                  ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                                  : 'bg-rose-950 text-rose-300 border-rose-800'
+                              }`}
+                            >
+                              {simIdentityDoc} ({simStampValid ? 'Stamp Valid <= 3m' : 'REJECTED: Stamp > 3m'})
+                            </span>
+                          </div>
+                        </div>
+                        {!simCleared && (
+                          <div className="text-[11px] font-mono text-rose-300 shrink-0">
+                            Action: Blocks SETA/QCTO reg &amp; emails learner missing list
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Gating Blocking Conditions */}
                   <div className="p-3.5 bg-slate-950/70 rounded-lg border border-slate-800 space-y-2">

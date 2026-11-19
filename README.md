@@ -1,8 +1,10 @@
-# Mindworx ComplianceOS — Enterprise Compliance, OCR & RPA Automation Platform
+# ComplianceOS — Mindworx AI-Powered Compliance & Quality Assurance Management System
 
-An automated, gate-driven compliance dashboard and Quality Assurance & Control (QAC) platform built for **Mindworx Consulting (Pty) Ltd**, **Mindworx Academy (Pty) Ltd**, and **Mindworx Holdings (Pty) Ltd**.
+> **Intelligent compliance. Automated assurance. Audit-ready operations.**
 
-ComplianceOS turns statutory procedures into automated gate validations, document OCR pipelines, external regulatory portal bot checks, and human-in-the-loop sign-off workflows across **QCTO**, **MICT SETA**, **SARS**, **SITA**, **CIPC**, **COIDA**, and **B-BBEE** obligations.
+**ComplianceOS** is an AI-powered compliance and quality assurance management system built to automate and streamline **Mindworx Academy** and **Mindworx Consulting** compliance operations across nine operational compliance gates.
+
+It combines intelligent document processing (AI & OCR), automated rules-based gate validation, expiry monitoring, external portal bot checks, and authorized human approval workflows across **QCTO**, **MICT SETA**, **SARS**, **SITA**, **CIPC**, **COIDA**, and **B-BBEE** obligations—delivering three standard compliance outcomes: **PASSED**, **ACTION REQUIRED**, and **CRITICAL NON-COMPLIANCE**.
 
 ---
 

@@ -1,6 +1,7 @@
 export type ActiveTab =
   | 'dashboard'
   | 'workflow'
+  | 'architecture'
   | 'compliance-gates'
   | 'master-register'
   | 'audit-packs'
@@ -331,4 +332,60 @@ export interface WorkflowDocumentItem {
     auditEvidenceHash: string;
   };
 }
+
+export interface AgentTriggerSpec {
+  id: string;
+  label: string;
+  sourceEvent: string;
+  agentJob: string;
+  affectedGates: number[];
+  sampleAction: string;
+  outputReportSection: string;
+}
+
+export interface ExpiryRiskRule {
+  id: string;
+  item: string;
+  firstAlert: string;
+  escalation: string;
+  onExpiry: string;
+  severityOnLapse: GateComplianceStatus;
+  affectedGates: number[];
+}
+
+export interface GoogleWorkspaceLayer {
+  layer: string;
+  tool: string;
+  purpose: string;
+}
+
+export interface DriveFolderNode {
+  id: string;
+  path: string;
+  label: string;
+  description: string;
+  contents: string[];
+  requiredGates: number[];
+}
+
+export interface RoadmapPhase {
+  phase: number;
+  title: string;
+  focus: string;
+  deliverables: string[];
+  status: 'IN_PROGRESS' | 'NEXT' | 'PLANNED';
+}
+
+export interface ConfirmedDecision {
+  question: string;
+  decision: string;
+}
+
+export interface SpecNextStep {
+  id: string;
+  owner: string;
+  task: string;
+  completed: boolean;
+}
+
 

@@ -12,29 +12,56 @@ import {
   Check,
 } from 'lucide-react';
 import { EISA_CHECKLIST } from '../data/complianceOsData';
-import { EisaChecklistItem } from '../types';
+import { EisaChecklistItem, GateComplianceStatus } from '../types';
 
-export const EisaReadinessView: React.FC = () => {
+interface EisaReadinessViewProps {
+  onGate7StatusChange?: (
+    status: GateComplianceStatus,
+    readinessScore: number,
+    verifiedCount: number,
+    totalCount: number
+  ) => void;
+}
+
+export const EisaReadinessView: React.FC<EisaReadinessViewProps> = ({
+  onGate7StatusChange,
+}) => {
   const [checklist, setChecklist] = useState<EisaChecklistItem[]>(EISA_CHECKLIST);
   const [activeCategory, setActiveCategory] = useState<'All' | 'Venue' | 'Documents' | 'Staff'>('All');
   const [auditBanner, setAuditBanner] = useState<string | null>(null);
 
   const totalItems = checklist.length;
   const compliantItems = checklist.filter((item) => item.isCompliant).length;
-  const readinessScore = Math.round((compliantItems / totalItems) * 100);
+  const readinessScore = Number(((compliantItems / totalItems) * 100).toFixed(1));
 
   // Critical rules: 2 invigilators per room, valid accreditation letter, laptops with backup power, wall clock, signage
   const hasCriticalFailure = checklist.some(
     (item) => !item.isCompliant && item.severity === 'CRITICAL NON-COMPLIANCE'
   );
+  const hasAnyFailure = checklist.some((item) => !item.isCompliant);
 
   const handleToggleItem = (id: string) => {
-    setChecklist((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isCompliant: !item.isCompliant } : item
-      )
+    const updated = checklist.map((item) =>
+      item.id === id ? { ...item, isCompliant: !item.isCompliant } : item
     );
-    setAuditBanner('EISA Readiness Checklist updated. Recalculating Gate 7 Score...');
+    setChecklist(updated);
+
+    if (onGate7StatusChange) {
+      const nextCompliant = updated.filter((item) => item.isCompliant).length;
+      const nextScore = Number(((nextCompliant / updated.length) * 100).toFixed(1));
+      const nextCritical = updated.some(
+        (item) => !item.isCompliant && item.severity === 'CRITICAL NON-COMPLIANCE'
+      );
+      const nextAction = updated.some((item) => !item.isCompliant);
+      const nextStatus: GateComplianceStatus = nextCritical
+        ? 'CRITICAL NON-COMPLIANCE'
+        : nextAction
+        ? 'ACTION REQUIRED'
+        : 'PASSED';
+      onGate7StatusChange(nextStatus, nextScore, nextCompliant, updated.length);
+    }
+
+    setAuditBanner('EISA Readiness Checklist updated. Recalculating Gate 07 Score across ComplianceOS...');
     setTimeout(() => setAuditBanner(null), 2500);
   };
 
@@ -68,10 +95,18 @@ export const EisaReadinessView: React.FC = () => {
             </div>
             <div
               className={`text-xl font-bold font-mono mt-0.5 ${
-                hasCriticalFailure ? 'text-rose-400' : 'text-emerald-400'
+                hasCriticalFailure
+                  ? 'text-rose-400'
+                  : hasAnyFailure
+                  ? 'text-amber-400'
+                  : 'text-emerald-400'
               }`}
             >
-              {hasCriticalFailure ? 'CRITICAL NON-COMPLIANCE' : 'EXAM CLEARED (PASSED)'}
+              {hasCriticalFailure
+                ? 'CRITICAL NON-COMPLIANCE'
+                : hasAnyFailure
+                ? 'ACTION REQUIRED'
+                : 'EXAM CLEARED (PASSED)'}
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">
               Readiness: <strong className="text-slate-200 tabular-nums">{readinessScore}%</strong> ({compliantItems}/{totalItems} items)
@@ -81,6 +116,8 @@ export const EisaReadinessView: React.FC = () => {
             className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-mono font-bold text-xs ${
               hasCriticalFailure
                 ? 'border-rose-500/30 border-t-rose-400 text-rose-300'
+                : hasAnyFailure
+                ? 'border-amber-500/30 border-t-amber-400 text-amber-300'
                 : 'border-emerald-500/30 border-t-emerald-400 text-emerald-300'
             }`}
           >

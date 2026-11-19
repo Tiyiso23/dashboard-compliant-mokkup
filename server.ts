@@ -60,7 +60,7 @@ async function startServer() {
   app.get('/api/health', (_req, res) => {
     res.json({
       status: 'ok',
-      service: 'Mindworx Compliance Automation API',
+      service: 'ComplianceOS — Mindworx AI-Powered Compliance & Quality Assurance API',
       aiEngine: isVertexAI ? 'Google Cloud Vertex AI' : 'Google Gemini API',
       vertexAIConfigured: isVertexAI,
       project: isVertexAI ? gcpProject : undefined,
@@ -569,7 +569,7 @@ Return clean JSON:
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Mindworx Compliance Server running on port ${PORT}`);
+    console.log(`ComplianceOS Server running on port ${PORT}`);
   });
 }
 
