@@ -89,12 +89,12 @@ export const TopBar: React.FC<TopBarProps> = ({
           EISA Readiness
         </button>
         <button
-          onClick={() => onSelectTab('automation-centre')}
+          onClick={() => onSelectTab('architecture')}
           className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
-            activeTab === 'automation-centre' ? 'text-cyan-400 font-semibold' : ''
+            activeTab === 'architecture' ? 'text-cyan-400 font-semibold' : ''
           }`}
         >
-          OCR & RPA
+          Architecture
         </button>
       </nav>
 

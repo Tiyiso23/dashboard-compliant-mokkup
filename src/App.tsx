@@ -166,6 +166,7 @@ export default function App() {
               <DashboardOverview
                 documents={documents}
                 gates={gates}
+                masterRegister={masterRegister}
                 onNavigateToTab={setActiveTab}
                 onNavigateToSarsSubTab={(sub) => {
                   setActiveTab('sars');

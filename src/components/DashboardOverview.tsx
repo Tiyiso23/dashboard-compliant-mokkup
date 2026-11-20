@@ -1,271 +1,216 @@
 import React, { useState } from 'react';
 import {
-  Building2,
-  GraduationCap,
-  Briefcase,
   CheckCircle2,
   AlertTriangle,
-  XCircle,
-  FolderSync,
-  Bot,
-  KeyRound,
-  ShieldCheck,
-  Globe,
-  RefreshCw,
-  ExternalLink,
-  ChevronRight,
-  Send,
-  Lock,
+  ShieldAlert,
   Layers,
-  Sparkles,
-  ArrowRight,
+  Folder,
   Clock,
-  Check,
-  X,
+  Lock,
+  Unlock,
+  GraduationCap,
+  FileCheck,
+  Sparkles,
+  UserCheck,
+  ArrowRight,
+  Cpu,
+  ClipboardList,
 } from 'lucide-react';
 import {
   ComplianceDocument,
-  CompanyEntity,
-  CompanyEntityId,
-  ExternalBotPingTarget,
-  DynamicMfaSession,
   ActiveTab,
   SarsSubTab,
   GateDefinition,
+  MasterRegisterItem,
 } from '../types';
-import { COMPANY_ENTITIES, BOT_PING_TARGETS, INITIAL_DYNAMIC_MFA_SESSIONS } from '../data/mockComplianceData';
-import { COMPLIANCE_GATES, EXPIRY_RISK_RULES } from '../data/complianceOsData';
+import {
+  COMPLIANCE_GATES,
+  MASTER_DOCUMENT_REGISTER,
+  COHORTS_LIST,
+  NON_CONFORMANCE_REPORTS,
+  EXPIRY_RISK_RULES,
+} from '../data/complianceOsData';
 
 interface DashboardOverviewProps {
   documents: ComplianceDocument[];
   gates?: GateDefinition[];
+  masterRegister?: MasterRegisterItem[];
   onNavigateToTab: (tab: ActiveTab) => void;
-  onNavigateToSarsSubTab: (subTab: SarsSubTab) => void;
-  onTriggerRpa: (action: string) => void;
+  onNavigateToSarsSubTab?: (subTab: SarsSubTab) => void;
+  onTriggerRpa?: (action: string) => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
-  documents,
   gates: propGates,
+  masterRegister: propRegister,
   onNavigateToTab,
-  onNavigateToSarsSubTab,
-  onTriggerRpa,
 }) => {
-  // Master Dashboard 2 Separate Tabs Requirement: Academic Compliance vs Consulting Compliance
-  const [masterDashboardTab, setMasterDashboardTab] = useState<'academic' | 'consulting'>('academic');
-  // Multi-Company Architecture Filter
-  const [selectedCompanyId, setSelectedCompanyId] = useState<CompanyEntityId>('all');
-  // External Bot Pings state
-  const [botTargets, setBotTargets] = useState<ExternalBotPingTarget[]>(BOT_PING_TARGETS);
-  const [isPingingBots, setIsPingingBots] = useState(false);
-  // Manual Intervention / Dynamic PIN verification sessions
-  const [mfaSessions, setMfaSessions] = useState<DynamicMfaSession[]>(INITIAL_DYNAMIC_MFA_SESSIONS);
-  const [pinInputs, setPinInputs] = useState<Record<string, string>>({
-    'MFA-MICT-88912': '849102',
-    'MFA-COIDA-99410': '592184',
-  });
-  const [pinNotice, setPinNotice] = useState<string | null>(null);
+  const [selectedPillar, setSelectedPillar] = useState<
+    'All' | 'QCTO' | 'MICT SETA' | 'Document QA' | 'B-BBEE'
+  >('All');
 
   const gates = propGates || COMPLIANCE_GATES;
+  const registerItems = propRegister || MASTER_DOCUMENT_REGISTER;
+
+  // Standard Compliance Outcomes (PASSED, ACTION REQUIRED, CRITICAL NON-COMPLIANCE)
   const passedGates = gates.filter((g) => g.status === 'PASSED').length;
   const actionGates = gates.filter((g) => g.status === 'ACTION REQUIRED').length;
   const criticalGates = gates.filter((g) => g.status === 'CRITICAL NON-COMPLIANCE').length;
 
-  // Filter documents based on active Master Dashboard Tab (Academic vs Consulting) and Company
-  const tabCategory = masterDashboardTab === 'academic' ? 'Academic' : 'Consulting';
-  const categoryDocuments = documents.filter((d) => {
-    const matchesCategory = d.category === tabCategory;
-    if (selectedCompanyId === 'all') return matchesCategory;
-    if (selectedCompanyId === 'mwx_consulting') {
-      return matchesCategory && (d.companyName.includes('CONSULTING') || d.taxReference === '9012847192');
-    }
-    if (selectedCompanyId === 'mwx_academy') {
-      return matchesCategory && (d.companyName.includes('ACADEMY') || d.category === 'Academic');
-    }
-    if (selectedCompanyId === 'mwx_holdings') {
-      return matchesCategory && d.companyName.includes('HOLDINGS');
-    }
-    return matchesCategory;
-  });
+  const passedDocs = registerItems.filter((i) => i.status === 'PASSED').length;
+  const actionDocs = registerItems.filter((i) => i.status === 'ACTION REQUIRED').length;
+  const criticalDocs = registerItems.filter((i) => i.status === 'CRITICAL NON-COMPLIANCE').length;
 
-  // Calculate status counts according to the prompt indicator spec:
-  // Green for compliance, Yellow for warnings, Red for expired items
-  const greenCompliantCount = categoryDocuments.filter((d) => d.status === 'COMPLIANT').length;
-  const yellowWarningCount = categoryDocuments.filter((d) => d.status === 'WARNING').length;
-  const redExpiredCount = categoryDocuments.filter((d) => d.status === 'EXPIRED').length;
+  const avgGateReadiness = (
+    gates.reduce((acc, g) => acc + g.readinessScore, 0) / gates.length
+  ).toFixed(1);
 
-  // Ping External Bots across shared drive folders
-  const handlePingAllBots = () => {
-    setIsPingingBots(true);
-    setTimeout(() => {
-      setBotTargets((prev) =>
-        prev.map((bot) => ({
-          ...bot,
-          lastPingStatus: bot.id === 'bot-labour' ? 'ONLINE' : bot.lastPingStatus,
-          latencyMs: Math.floor(120 + Math.random() * 90),
-          lastPingTime: 'Just now (live verified)',
-          verifiedDocuments: bot.verifiedDocuments + 1,
-        }))
-      );
-      setIsPingingBots(false);
-      setPinNotice('All 6 external government & regulatory gateways pinged and validated across Google Shared Drive folders.');
-      setTimeout(() => setPinNotice(null), 4000);
-    }, 1100);
-  };
+  const totalLearners = COHORTS_LIST.reduce((acc, c) => acc + c.totalLearners, 0);
 
-  // Submit manual intervention Dynamic PIN / OTP
-  const handleSubmitDynamicPin = (sessionId: string) => {
-    const enteredPin = pinInputs[sessionId];
-    if (!enteredPin || enteredPin.trim().length < 4) {
-      setPinNotice('Please enter a valid 4-to-6 digit dynamic verification PIN.');
-      setTimeout(() => setPinNotice(null), 3000);
-      return;
-    }
+  const filteredGates = gates.filter(
+    (g) => selectedPillar === 'All' || g.pillar === selectedPillar
+  );
 
-    setMfaSessions((prev) =>
-      prev.map((s) => (s.sessionId === sessionId ? { ...s, status: 'VERIFIED' } : s))
-    );
+  // Highlighted register items requiring attention (Critical first, then Action Required, then expiring <= 30d)
+  const attentionDocuments = registerItems.filter(
+    (item) =>
+      item.status !== 'PASSED' ||
+      (item.daysRemaining !== undefined && item.daysRemaining <= 30)
+  );
 
-    // Update matching bot status
-    const targetSession = mfaSessions.find((s) => s.sessionId === sessionId);
-    if (targetSession) {
-      setBotTargets((prev) =>
-        prev.map((b) =>
-          b.id === targetSession.targetId
-            ? { ...b, mfaSessionStatus: 'VERIFIED', lastPingTime: 'Just now (Authenticated with Dynamic PIN)' }
-            : b
-        )
-      );
-    }
-
-    setPinNotice(`Manual intervention authenticated: Dynamic PIN "${enteredPin}" accepted. Portal session unlocked.`);
-    setTimeout(() => setPinNotice(null), 4500);
-  };
-
-  const selectedCompany = COMPANY_ENTITIES.find((c) => c.id === selectedCompanyId) || COMPANY_ENTITIES[0];
+  // Submission gate status summary for Compliance Officer (Tandeeka)
+  const submissionQueues = [
+    {
+      label: 'Gate 04 · QCTO Monitoring Visit File',
+      entity: 'QCTO',
+      gate: gates.find((g) => g.id === 4),
+      targetTab: 'audit-packs' as ActiveTab,
+    },
+    {
+      label: 'Gate 05 · MICT SETA Verification File',
+      entity: 'MICT SETA',
+      gate: gates.find((g) => g.id === 5),
+      targetTab: 'audit-packs' as ActiveTab,
+    },
+    {
+      label: 'Gate 06 · Post-Course Review Pack',
+      entity: 'QAC / EISA Clearance',
+      gate: gates.find((g) => g.id === 6),
+      targetTab: 'audit-packs' as ActiveTab,
+    },
+    {
+      label: 'Gate 07 · EISA Exam Readiness Clearance',
+      entity: 'QCTO / AQP',
+      gate: gates.find((g) => g.id === 7),
+      targetTab: 'eisa-readiness' as ActiveTab,
+    },
+    {
+      label: 'Gate 08 · New Qualification Accreditation',
+      entity: 'MICT SETA / QCTO',
+      gate: gates.find((g) => g.id === 8),
+      targetTab: 'audit-packs' as ActiveTab,
+    },
+    {
+      label: 'Gate 09 · B-BBEE Evidence Reconciliation',
+      entity: 'WSP/ATR & Client Portal',
+      gate: gates.find((g) => g.id === 9),
+      targetTab: 'audit-packs' as ActiveTab,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Executive Welcome & Multi-Company Selector Header */}
+      {/* 1. ComplianceOS Executive Identity & Positioning Header */}
       <div className="p-6 rounded-xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-850 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-sm">
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-semibold">
               ComplianceOS · AI &amp; Business Process Automation
             </span>
-            <span className="text-[10px] text-slate-400 font-mono">
-              · Intelligent compliance. Automated assurance. Audit-ready operations.
+            <span className="text-[10px] font-mono text-slate-400">
+              · Mindworx Academy QAC Map (Phyllis Muthombeni, 14 Oct 2026)
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
             ComplianceOS — Mindworx AI-Powered Compliance &amp; Quality Assurance Management System
           </h1>
+          <div className="text-xs font-mono text-emerald-300">
+            Intelligent compliance. Automated assurance. Audit-ready operations.
+          </div>
           <p className="text-sm text-slate-400 max-w-3xl leading-relaxed">
-            Automates document verification, compliance monitoring, expiry alerts and regulatory readiness across nine operational compliance gates—combining AI-powered document intelligence, rules-based validation and authorized human approval so learner, staff and organisational records stay complete, traceable and audit-ready.
+            Enforces compliance workflows across nine operational gates—combining AI &amp; OCR document intelligence, rules-based validation, automated expiry monitoring, audit-file compilation, and authorised human approval so incomplete or invalid evidence never reaches MICT SETA, QCTO, or EISA evaluators.
           </p>
         </div>
 
-        {/* Multi-Company Selector Card */}
-        <div className="flex flex-col gap-2 shrink-0 bg-slate-950/80 p-4 rounded-lg border border-slate-800 min-w-[280px]">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono text-slate-400 uppercase flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-              Active Company Entity:
-            </span>
-            <span
-              className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
-                selectedCompany.overallStatus === 'COMPLIANT'
-                  ? 'text-emerald-400 bg-emerald-950 border-emerald-800'
-                  : 'text-amber-400 bg-amber-950 border-amber-800'
-              }`}
-            >
-              {selectedCompany.overallStatus}
-            </span>
+        {/* Readiness KPI Box */}
+        <div className="flex flex-col gap-3 shrink-0 bg-slate-950/80 p-4 rounded-lg border border-slate-800 min-w-[270px]">
+          <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+            <div>
+              <div className="text-[10px] font-mono text-slate-400 uppercase">
+                Overall Gate Readiness
+              </div>
+              <div className="text-2xl font-bold text-cyan-400 font-mono tabular-nums">
+                {avgGateReadiness}%
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] font-mono text-slate-400 uppercase">
+                Active Cohorts
+              </div>
+              <div className="text-sm font-bold text-white font-mono tabular-nums">
+                {totalLearners} Learners
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono">4 Programmes</div>
+            </div>
           </div>
 
-          <select
-            value={selectedCompanyId}
-            onChange={(e) => setSelectedCompanyId(e.target.value as CompanyEntityId)}
-            className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-cyan-400 font-semibold"
-          >
-            {COMPANY_ENTITIES.map((c) => (
-              <option key={c.id} value={c.id} className="bg-slate-950 text-slate-200">
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
+            <span>Engine: Gemini AI + Apps Script</span>
+            <span className="text-emerald-400">{registerItems.length} Docs Tracked</span>
+          </div>
 
-          <div className="text-[10px] font-mono text-slate-500 flex items-center justify-between pt-1 border-t border-slate-800/80">
-            <span>Reg: {selectedCompany.registrationNumber}</span>
-            <span className="text-cyan-400">{selectedCompany.activeDocumentsCount} Docs</span>
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              onClick={() => onNavigateToTab('workflow')}
+              className="flex-1 py-1.5 px-2.5 text-[11px] font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded transition-colors flex items-center justify-center gap-1"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Intake Flow</span>
+            </button>
+            <button
+              onClick={() => onNavigateToTab('architecture')}
+              className="py-1.5 px-2.5 text-[11px] font-medium text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded transition-colors"
+            >
+              Google Stack
+            </button>
           </div>
         </div>
       </div>
 
-      {pinNotice && (
-        <div className="p-3 bg-cyan-950/90 border border-cyan-800 rounded-lg text-xs text-cyan-200 flex items-center justify-between font-mono animate-fade-in shadow-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>{pinNotice}</span>
-          </div>
-          <button onClick={() => setPinNotice(null)} className="text-cyan-400 hover:text-white">✕</button>
-        </div>
-      )}
-
-      {/* MASTER DASHBOARD: 2 SEPARATE TABS (Academic Compliance vs Consulting Compliance) */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
-              Master Dashboard Focus:
-            </span>
-            <div className="inline-flex p-1 bg-slate-900 rounded-lg border border-slate-800">
-              <button
-                onClick={() => setMasterDashboardTab('academic')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  masterDashboardTab === 'academic'
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <GraduationCap className="w-4 h-4" />
-                <span>Academic Compliance Tab</span>
-              </button>
-
-              <button
-                onClick={() => setMasterDashboardTab('consulting')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  masterDashboardTab === 'consulting'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Briefcase className="w-4 h-4" />
-                <span>Consulting Compliance Tab</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="text-xs text-slate-400 flex items-center gap-2 font-mono">
-            <span>Folder: </span>
-            <span className="text-cyan-300 truncate max-w-xs">{selectedCompany.sharedDriveFolder}</span>
-          </div>
+      {/* 2. Standard Compliance Outcomes (PASSED / ACTION REQUIRED / CRITICAL NON-COMPLIANCE) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
+            Standard Compliance Outcomes (Zero Unverified Assumptions Policy)
+          </span>
+          <span className="text-[11px] font-mono text-slate-500">
+            Blurry, unsigned, or expired documents are flagged as unverified—never assumed compliant
+          </span>
         </div>
 
-        {/* STATUS INDICATORS ROW: GREEN for compliance, YELLOW for warnings, and RED for expired items */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* 1. GREEN Status Indicator: Compliance */}
+          {/* PASSED */}
           <div className="p-4 rounded-lg bg-emerald-950/30 border border-emerald-500/40 flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
-                <span>Green · Fully Compliant</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                <span>PASSED</span>
               </div>
               <div className="text-2xl font-bold text-white font-mono tabular-nums">
-                {greenCompliantCount} Documents
+                {passedGates} / {gates.length} Gates
               </div>
               <div className="text-xs text-slate-400">
-                Verified against statutory regulations & valid
+                <strong className="text-emerald-300 tabular-nums">{passedDocs}</strong> Master Register artifacts verified &amp; current
               </div>
             </div>
             <div className="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -273,18 +218,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
           </div>
 
-          {/* 2. YELLOW Status Indicator: Warnings */}
+          {/* ACTION REQUIRED */}
           <div className="p-4 rounded-lg bg-amber-950/30 border border-amber-500/40 flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></span>
-                <span>Yellow · Warnings & Renewal Window</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
+                <span>ACTION REQUIRED</span>
               </div>
               <div className="text-2xl font-bold text-amber-300 font-mono tabular-nums">
-                {yellowWarningCount} Items Flagged
+                {actionGates} Gates
               </div>
               <div className="text-xs text-slate-400">
-                Expiring within &lt;30 days or pending certified stamps
+                <strong className="text-amber-300 tabular-nums">{actionDocs}</strong> register items in alert window or missing signatures
               </div>
             </div>
             <div className="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
@@ -292,257 +237,138 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
           </div>
 
-          {/* 3. RED Status Indicator: Expired Items */}
+          {/* CRITICAL NON-COMPLIANCE */}
           <div className="p-4 rounded-lg bg-rose-950/30 border border-rose-500/40 flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-rose-400 uppercase tracking-wider">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_8px_#f43f5e] animate-pulse"></span>
-                <span>Red · Expired / Non-Compliant</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_8px_#f43f5e] animate-pulse" />
+                <span>CRITICAL NON-COMPLIANCE</span>
               </div>
               <div className="text-2xl font-bold text-rose-400 font-mono tabular-nums">
-                {redExpiredCount} Expired
+                {criticalGates} Gate Blocked
               </div>
               <div className="text-xs text-slate-400">
-                Zero unverified assumptions; requires re-filing
+                <strong className="text-rose-300 tabular-nums">{criticalDocs}</strong> lapsed item (&gt;3m certified ID / EISA invigilators)
               </div>
             </div>
             <div className="w-12 h-12 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-              <XCircle className="w-6 h-6" />
+              <ShieldAlert className="w-6 h-6" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* AUTOMATED BOTS SECTION & SHARED DRIVE VALIDITY TRACKING */}
+      {/* 3. The 4 Pillars & 9 Automated Compliance Gates */}
       <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <Bot className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-sm font-bold text-slate-100">
-                Automated Bot Network & Shared Drive Document Validity Verification
-              </h3>
+              <Layers className="w-5 h-5 text-cyan-400" />
+              <h2 className="text-sm font-bold text-white">
+                Four Compliance Pillars &amp; Nine Operational Gates
+              </h2>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Headless Playwright bots continuously ping external governing bodies (SARS, CIPC, SITA, SETA) and verify matching files inside Google Shared Drive folders.
+              Nothing is submitted to MICT SETA or QCTO, and no EISA exam goes ahead, until the matching gate clears 100%.
             </p>
           </div>
 
-          <button
-            onClick={handlePingAllBots}
-            disabled={isPingingBots}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 rounded transition-colors shadow-sm shrink-0"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isPingingBots ? 'animate-spin' : ''}`} />
-            <span>{isPingingBots ? 'Pinging External Gateways...' : 'Trigger Bot Network Ping'}</span>
-          </button>
-        </div>
-
-        {/* Bot Status Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {botTargets.map((bot) => (
-            <div
-              key={bot.id}
-              className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2 text-xs"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-200 truncate">{bot.name}</span>
-                <span
-                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
-                    bot.lastPingStatus === 'ONLINE'
-                      ? 'text-emerald-400 bg-emerald-950/80 border-emerald-800'
-                      : 'text-amber-400 bg-amber-950/80 border-amber-800'
-                  }`}
-                >
-                  {bot.lastPingStatus === 'ONLINE' ? 'ONLINE (200 OK)' : 'LATENCY WARN'}
-                </span>
-              </div>
-
-              <div className="text-[11px] font-mono text-cyan-400/90 truncate" title={bot.portalUrl}>
-                {bot.portalUrl}
-              </div>
-
-              <div className="p-2 bg-slate-900 rounded border border-slate-800/80 text-[10px] font-mono space-y-1 text-slate-400">
-                <div className="flex justify-between">
-                  <span>Ping Latency:</span>
-                  <span className="text-emerald-400 tabular-nums">{bot.latencyMs}ms</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Monitored Shared Drive:</span>
-                  <span className="text-slate-200 truncate max-w-[130px]" title={bot.monitoredFolder}>
-                    {bot.monitoredFolder}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Verified Artifacts:</span>
-                  <span className="text-cyan-300 font-bold">{bot.verifiedDocuments} Files Active</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-                <span>Last check: {bot.lastPingTime}</span>
-                {bot.requiresDynamicMfa && (
-                  <span className="text-amber-400 font-mono flex items-center gap-1">
-                    <KeyRound className="w-3 h-3" />
-                    <span>MFA Protected</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* MANUAL INTERVENTION SUPPORT: DYNAMIC PASSWORDS & ONE-OFF VERIFICATION PINS */}
-      <div className="p-5 rounded-xl bg-gradient-to-r from-amber-950/20 via-slate-900 to-slate-900 border border-amber-500/40 space-y-4 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
-              <KeyRound className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-100">
-                  Manual Intervention Console: Dynamic Passwords & One-Off Verification PINs
-                </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                  HUMAN IN THE LOOP
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                Some statutory systems (SARS TCS PIN, MICT SETA OTP, Department of Labour CF-Portal) require dynamic passwords, time-based OTPs, or one-off verification codes that cannot be fully bypassed by headless bots.
-              </p>
-            </div>
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 flex-wrap">
+            {(['All', 'QCTO', 'MICT SETA', 'Document QA', 'B-BBEE'] as const).map((pillar) => (
+              <button
+                key={pillar}
+                onClick={() => setSelectedPillar(pillar)}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors ${
+                  selectedPillar === pillar
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {pillar}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Dynamic PIN Sessions Queue */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-          {mfaSessions.map((session) => (
-            <div
-              key={session.sessionId}
-              className={`p-4 rounded-lg border text-xs space-y-3 transition-all ${
-                session.status === 'VERIFIED'
-                  ? 'bg-slate-950/80 border-emerald-500/40'
-                  : 'bg-slate-950 border-amber-500/40'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-100">{session.portalName}</span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                    session.status === 'VERIFIED'
-                      ? 'text-emerald-400 bg-emerald-950 border-emerald-800'
-                      : 'text-amber-400 bg-amber-950 border-amber-800 animate-pulse'
-                  }`}
-                >
-                  {session.status === 'VERIFIED' ? 'AUTHENTICATED' : 'ACTION REQUIRED'}
-                </span>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {filteredGates.map((gate) => {
+            const isPassed = gate.status === 'PASSED';
+            const isCritical = gate.status === 'CRITICAL NON-COMPLIANCE';
 
-              <p className="text-slate-300 text-[11px] leading-relaxed">
-                {session.promptMessage}
-              </p>
+            const borderClass = isPassed
+              ? 'border-emerald-500/30 bg-slate-950/90'
+              : isCritical
+              ? 'border-rose-500/50 bg-rose-950/15'
+              : 'border-amber-500/40 bg-amber-950/15';
 
-              <div className="flex items-center gap-2 pt-1">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    disabled={session.status === 'VERIFIED'}
-                    value={pinInputs[session.sessionId] || ''}
-                    onChange={(e) =>
-                      setPinInputs({ ...pinInputs, [session.sessionId]: e.target.value })
-                    }
-                    placeholder={`Enter ${session.pinType}...`}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-100 font-mono tracking-widest focus:outline-none focus:border-amber-400 disabled:opacity-60"
-                  />
-                </div>
+            const badgeClass = isPassed
+              ? 'text-emerald-300 bg-emerald-950 border-emerald-800'
+              : isCritical
+              ? 'text-rose-300 bg-rose-950 border-rose-800'
+              : 'text-amber-300 bg-amber-950 border-amber-800';
 
-                <button
-                  onClick={() => handleSubmitDynamicPin(session.sessionId)}
-                  disabled={session.status === 'VERIFIED'}
-                  className={`px-3.5 py-1.5 text-xs font-semibold rounded transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-sm ${
-                    session.status === 'VERIFIED'
-                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800 cursor-default'
-                      : 'bg-amber-400 hover:bg-amber-300 text-slate-950'
-                  }`}
-                >
-                  {session.status === 'VERIFIED' ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Verified</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Submit PIN</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800/80">
-                <span>Session: {session.sessionId}</span>
-                <span>Type: {session.pinType}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Current Active Category Document Register Preview */}
-      <div className="p-5 rounded-lg bg-slate-900/60 border border-slate-800 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FolderSync className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-bold text-slate-200">
-              {masterDashboardTab === 'academic' ? 'Academic Compliance' : 'Consulting Compliance'} Document Roster ({selectedCompany.name})
-            </h3>
-          </div>
-          <button
-            onClick={() => onNavigateToTab(masterDashboardTab === 'academic' ? 'academic' : 'consulting')}
-            className="text-xs font-medium text-cyan-400 hover:text-cyan-300 hover:underline font-mono"
-          >
-            Open Dedicated {masterDashboardTab === 'academic' ? 'Academic' : 'Consulting'} Centre →
-          </button>
-        </div>
-
-        <div className="divide-y divide-slate-800/80 border border-slate-800 rounded bg-slate-950/80 overflow-hidden text-xs">
-          {categoryDocuments.map((doc) => {
-            let statusDot = 'bg-emerald-400 shadow-[0_0_8px_#34d399]';
-            let statusText = 'text-emerald-400';
-            if (doc.status === 'WARNING') {
-              statusDot = 'bg-amber-400 shadow-[0_0_8px_#fbbf24]';
-              statusText = 'text-amber-400';
-            } else if (doc.status === 'EXPIRED') {
-              statusDot = 'bg-rose-400 shadow-[0_0_8px_#f43f5e] animate-pulse';
-              statusText = 'text-rose-400';
-            }
+            const barColor = isPassed
+              ? 'bg-emerald-400'
+              : isCritical
+              ? 'bg-rose-400'
+              : 'bg-amber-400';
 
             return (
-              <div key={doc.id} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-900/60 transition-colors">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${statusDot}`}></span>
-                    <span className="font-bold text-slate-100">{doc.title}</span>
-                    <span className="text-[10px] font-mono text-slate-500">({doc.documentType})</span>
+              <div
+                key={gate.id}
+                className={`p-4 rounded-lg border flex flex-col justify-between gap-3 transition-all hover:border-slate-600 ${borderClass}`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-900 text-cyan-400 border border-slate-800">
+                        G0{gate.id}
+                      </span>
+                      <span className="text-[10px] font-mono uppercase text-slate-400">
+                        {gate.pillar}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${badgeClass}`}
+                    >
+                      {gate.status}
+                    </span>
                   </div>
-                  <div className="text-[11px] text-slate-400">
-                    Entity: {doc.companyName} · Ref: {doc.taxReference} · Verified by: {doc.verifiedBy}
-                  </div>
+
+                  <div className="text-sm font-bold text-slate-100">{gate.name}</div>
+                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                    {gate.validationRule}
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-mono">
-                  <div className="text-right">
-                    <div className="text-slate-300">Exp: {doc.expiryDate}</div>
-                    <div className={`text-[11px] ${statusText}`}>{doc.status}</div>
+                <div className="space-y-2 pt-2 border-t border-slate-800/70">
+                  <div className="flex items-center justify-between text-[11px] font-mono">
+                    <span className="text-slate-400">
+                      {gate.itemsVerified}/{gate.itemsTotal} Verified
+                    </span>
+                    <span className="text-slate-200 font-bold tabular-nums">
+                      {gate.readinessScore}%
+                    </span>
                   </div>
-                  <button
-                    onClick={() => onNavigateToTab('automation-centre')}
-                    className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded text-[11px] transition-colors"
-                  >
-                    OCR Scan
-                  </button>
+                  <div className="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${barColor}`}
+                      style={{ width: `${gate.readinessScore}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] pt-1">
+                    <span className="text-slate-500 truncate max-w-[170px]">
+                      Owner: {gate.leadOwner}
+                    </span>
+                    <button
+                      onClick={() =>
+                        onNavigateToTab(gate.id === 7 ? 'eisa-readiness' : 'compliance-gates')
+                      }
+                      className="text-cyan-400 hover:text-cyan-300 font-mono font-semibold"
+                    >
+                      {gate.id === 7 ? 'Score EISA →' : 'Inspect Gate →'}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -550,39 +376,312 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
       </div>
 
-      {/* ComplianceOS Gate Pulse & Google Workspace Architecture Bar */}
-      <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white">
-              ComplianceOS Process Map Pulse (9 Automated Gates &amp; {EXPIRY_RISK_RULES.length} Expiry Rules)
-            </h3>
+      {/* 4. Master Document Register Alerts & 7 Expiry Escalation Rules */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left: Register Exceptions & 3-Month ID Rule */}
+        <div className="lg:col-span-7 p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <Folder className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white">
+                  Master Document Register · Active Flagged Records
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Documents stored in Google Shared Drive and audited automatically by Gemini via Apps Script.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateToTab('master-register')}
+              className="text-xs font-mono text-cyan-400 hover:underline shrink-0"
+            >
+              View All {registerItems.length} Docs →
+            </button>
           </div>
-          <p className="text-xs text-slate-400">
-            Phyllis Muthombeni QAC Specification (14 Oct 2026) · Google Workspace + Lucid Architecture ·{' '}
-            <span className="text-emerald-400 font-mono">{passedGates} Passed</span> ·{' '}
-            <span className="text-amber-400 font-mono">{actionGates} Action Required</span> ·{' '}
-            <span className="text-rose-400 font-mono">{criticalGates} Critical Block</span>
-          </p>
+
+          <div className="space-y-2.5">
+            {attentionDocuments.map((doc) => {
+              const isCritical = doc.status === 'CRITICAL NON-COMPLIANCE';
+              const isAction = doc.status === 'ACTION REQUIRED';
+              return (
+                <div
+                  key={doc.id}
+                  className={`p-3.5 rounded-lg border text-xs space-y-1.5 ${
+                    isCritical
+                      ? 'bg-rose-950/20 border-rose-500/40'
+                      : isAction
+                      ? 'bg-amber-950/20 border-amber-500/40'
+                      : 'bg-slate-950 border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-100">{doc.documentName}</span>
+                    <span
+                      className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
+                        isCritical
+                          ? 'text-rose-300 bg-rose-950 border-rose-800'
+                          : isAction
+                          ? 'text-amber-300 bg-amber-950 border-amber-800'
+                          : 'text-emerald-300 bg-emerald-950 border-emerald-800'
+                      }`}
+                    >
+                      {doc.status}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-400 truncate">
+                    {doc.googleDrivePath}
+                  </div>
+                  {doc.rejectionReason ? (
+                    <div className="text-[11px] text-rose-300">
+                      ⚠ {doc.rejectionReason}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-slate-300">
+                      {doc.validityCheck} · {doc.daysRemaining} days remaining
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1">
+                    <span>
+                      Applies to: {doc.appliesTo} · Gates:{' '}
+                      {doc.gatesNeeded.map((g) => `G0${g}`).join(', ')}
+                    </span>
+                    <span className="text-cyan-400">Owner: {doc.owner}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+        {/* Right: 7 Automated Expiry & Escalation Windows */}
+        <div className="lg:col-span-5 p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-bold text-white">
+                  7 Expiry &amp; Risk Escalation Windows
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Any lapsed date is treated as CRITICAL NON-COMPLIANCE.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateToTab('architecture')}
+              className="text-xs font-mono text-cyan-400 hover:underline shrink-0"
+            >
+              Simulate →
+            </button>
+          </div>
+
+          <div className="divide-y divide-slate-800/70 border border-slate-800 rounded-lg bg-slate-950 overflow-hidden text-[11px]">
+            {EXPIRY_RISK_RULES.map((rule) => (
+              <div key={rule.id} className="p-2.5 space-y-0.5 hover:bg-slate-900/50">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-slate-200">{rule.item}</span>
+                  <span className="font-mono text-[10px] text-cyan-300 shrink-0">
+                    {rule.firstAlert}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-[10px]">
+                  <span className="text-amber-300 font-mono">Esc: {rule.escalation}</span>
+                  <span className="text-rose-300 truncate">{rule.onExpiry}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Corrective Action Plans (NCRs) & Authorised Human Approval Gate */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Active Non-Conformance Reports & Corrective Action Plan */}
+        <div className="lg:col-span-7 p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-rose-400" />
+                <h3 className="text-sm font-bold text-white">
+                  Corrective Action Plan (Active Non-Conformance Reports)
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Standard 4-part agent output naming who acts and by when.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateToTab('audit-packs')}
+              className="text-xs font-mono text-cyan-400 hover:underline shrink-0"
+            >
+              Open Audit Packs →
+            </button>
+          </div>
+
+          <div className="space-y-2.5">
+            {NON_CONFORMANCE_REPORTS.map((ncr) => (
+              <div
+                key={ncr.id}
+                className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1.5 text-xs"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-mono font-bold text-rose-400 shrink-0">{ncr.id}</span>
+                    <span className="font-bold text-slate-100 truncate">{ncr.title}</span>
+                  </div>
+                  <span
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
+                      ncr.severity === 'CRITICAL NON-COMPLIANCE'
+                        ? 'text-rose-300 bg-rose-950 border-rose-800'
+                        : 'text-amber-300 bg-amber-950 border-amber-800'
+                    }`}
+                  >
+                    {ncr.severity}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300">{ncr.correctiveAction}</p>
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/70">
+                  <span>
+                    Assignee: <strong className="text-cyan-300">{ncr.assignee}</strong> · Due:{' '}
+                    <strong className="text-amber-300">{ncr.dueDate}</strong>
+                  </span>
+                  <span>Escalated to: {ncr.escalatedTo}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Authorised Human Approval & Portal Submission Locks */}
+        <div className="lg:col-span-5 p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-bold text-white">
+                  Authorised Human Approval &amp; Submission Locks
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Agent prepares files; Compliance Officer (Tandeeka) approves portal submissions.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateToTab('raci-matrix')}
+              className="text-xs font-mono text-cyan-400 hover:underline shrink-0"
+            >
+              RACI Matrix →
+            </button>
+          </div>
+
+          <div className="p-3 rounded-lg bg-cyan-950/25 border border-cyan-500/30 text-[11px] text-slate-300">
+            <strong className="text-cyan-300">17 Sep 1:1 Governance:</strong> Tender &amp; Procurement Administrator owns compliance document management day to day; ComplianceOS handles checking &amp; compiling.
+          </div>
+
+          <div className="space-y-2">
+            {submissionQueues.map((q) => {
+              const cleared = q.gate?.status === 'PASSED';
+              return (
+                <button
+                  key={q.label}
+                  onClick={() => onNavigateToTab(q.targetTab)}
+                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 flex items-center justify-between gap-2 text-left transition-colors"
+                >
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-200 truncate">{q.label}</div>
+                    <div className="text-[10px] font-mono text-slate-500">{q.entity}</div>
+                  </div>
+                  <span
+                    className={`flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
+                      cleared
+                        ? 'text-emerald-300 bg-emerald-950 border-emerald-800'
+                        : 'text-rose-300 bg-rose-950 border-rose-800'
+                    }`}
+                  >
+                    {cleared ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                    <span>{cleared ? 'READY FOR APPROVAL' : 'GATE LOCKED'}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Active Cohorts Snapshot & Google Workspace Architecture Bar */}
+      <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-purple-400" />
+            <div>
+              <h3 className="text-sm font-bold text-white">
+                Mindworx Academy Cohorts &amp; QCTO Monitoring Windows
+              </h3>
+              <p className="text-xs text-slate-400">
+                Tracks learner types (Employed, Unemployed, Bank), 21-day to 2-month QCTO visit windows, and EISA targets.
+              </p>
+            </div>
+          </div>
+
           <button
-            onClick={() => onNavigateToTab('compliance-gates')}
-            className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded transition-colors"
+            onClick={() => onNavigateToTab('cohorts')}
+            className="text-xs font-mono text-cyan-400 hover:underline flex items-center gap-1 shrink-0"
           >
-            Inspect 9 Gates
+            <span>Manage Cohorts</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {COHORTS_LIST.map((cohort) => (
+            <button
+              key={cohort.id}
+              onClick={() => onNavigateToTab('cohorts')}
+              className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-cyan-500/40 text-left space-y-2 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-cyan-400">{cohort.code}</span>
+                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">
+                  {cohort.learnerType}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-slate-100 line-clamp-1">{cohort.name}</div>
+              <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-800/80">
+                <span className="text-slate-400">{cohort.totalLearners} Learners</span>
+                <span className="text-amber-300">QCTO: {cohort.qctoWindow.daysRemaining}d</span>
+                <span
+                  className={`font-bold tabular-nums ${
+                    cohort.complianceScore >= 95
+                      ? 'text-emerald-400'
+                      : cohort.complianceScore >= 90
+                      ? 'text-amber-400'
+                      : 'text-rose-400'
+                  }`}
+                >
+                  {cohort.complianceScore}%
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Google Workspace + Lucid Platform Strip */}
+        <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>
+              <strong className="text-white">Google Workspace Architecture:</strong> Lucid Process Maps · Shared Drive · Google Sheets Register · Google Forms · Gemini AI (Apps Script) · Google Calendar · Gmail Alerts · Looker Studio · MICT SETA &amp; QCTO Portals
+            </span>
+          </div>
           <button
             onClick={() => onNavigateToTab('architecture')}
-            className="px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded transition-colors shadow-sm"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded transition-colors shrink-0"
           >
-            Agent Architecture &amp; Roadmap →
+            Architecture &amp; 4-Phase Roadmap →
           </button>
         </div>
       </div>
     </div>
   );
 };
-
